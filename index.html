@@ -749,7 +749,7 @@
                             <div>
                                 <h3 class="text-xl font-semibold mb-2 text-text-light-primary" data-lang-key="important_note_title">Important Note</h3>
                                 <p data-lang-key="important_note_p1">
-                                    All predictions provided by ALPHA X AI are for informational and entertainment purposes only. Past performance is not indicative of future results. Please use this information responsibly.
+                                    All predictions provided by ALPHA X AI are for informational and entertainment purposes only. Past performance is not indicative of future results. Please use this information responsibly. Predictions are based on the device's local history and may vary if histories differ across devices.
                                 </p>
                             </div>
 
@@ -1271,7 +1271,7 @@
                 how_it_works_li9_adv: "<strong>Dynamic Confidence Scoring:</strong> Confidence reflects signal agreement, historical accuracy of similar patterns, and current volatility.",
                 how_it_works_li10_adv: "<strong>Adaptive Trend Protection:</strong> Automatically disables or flags predictions during highly unstable or unfavorable trends.",
                 important_note_title: "Important Note",
-                important_note_p1: "All predictions provided by ALPHA X AI are for informational and entertainment purposes only. Past performance is not indicative of future results. Please use this information responsibly.",
+                important_note_p1: "All predictions provided by ALPHA X AI are for informational and entertainment purposes only. Past performance is not indicative of future results. Please use this information responsibly. Predictions are based on the device's local history and may vary if histories differ across devices.",
                 meet_the_team_title: "Meet The Team", owner_info: "<strong>Owner/Developer:</strong> @ALPHAXAIWEB", owner_telegram: "Telegram Profile",
                 general_settings_title: "General Settings", more_info_title: "More Information", status: "Status",
                 language: "Language", notifications: "Notifications", sound: "Sound", reset_settings: "Reset Settings",
@@ -1332,7 +1332,7 @@
                 how_it_works_li9_adv: "<strong>गतिशील आत्मविश्वास स्कोरिंग:</strong> आत्मविश्वास सिग्नल समझौते, समान पैटर्न की ऐतिहासिक सटीकता और वर्तमान अस्थिरता को दर्शाता है।",
                 how_it_works_li10_adv: "<strong>अनुकूली प्रवृत्ति संरक्षण:</strong> अत्यधिक अस्थिर या प्रतिकूल प्रवृत्तियों के दौरान स्वचालित रूप से भविष्यवाणियां को अक्षम या फ़्लैग करता है।",
                 important_note_title: "महत्वपूर्ण लेख",
-                important_note_p1: "अल्फा एक्स एआई द्वारा प्रदान की गई सभी भविष्यवाणियां केवल सूचनात्मक और मनोरंजन प्रयोजनों के लिए हैं। पिछला प्रदर्शन भविष्य के परिणामों का संकेतक नहीं है। कृपया इस जानकारी का जिम्मेदारी से उपयोग करें।",
+                important_note_p1: "अल्फा एक्स एआई द्वारा प्रदान की गई सभी भविष्यवाणियां केवल सूचनात्मक और मनोरंजन प्रयोजनों के लिए हैं। पिछला प्रदर्शन भविष्य के परिणामों का संकेतक नहीं है। कृपया इस जानकारी का जिम्मेदारी से उपयोग करें। भविष्यवाणियां डिवाइस के स्थानीय इतिहास पर आधारित होती हैं और यदि विभिन्न उपकरणों पर इतिहास भिन्न होता है तो भिन्न हो सकती हैं।",
                 meet_the_team_title: "टीम से मिलें", owner_info: "<strong>मालिक/डेवलपर:</strong> @ALPHAXAIWEB", owner_telegram: "टेलीग्राम प्रोफाइल",
                 general_settings_title: "सामान्य सेटिंग्स", more_info_title: "और जानकारी", status: "स्थिति",
                 language: "भाषा", notifications: "सूचनाएं", sound: "ध्वनि", reset_settings: "सेटिंग्स रीसेट करें",
@@ -1895,7 +1895,9 @@
             if (data.length < period) return null;
             const k = 2 / (period + 1);
             let ema = calculateSMA(data.slice(data.length - period * 2, data.length - period), period); // Initial SMA for first EMA
-            if (ema === null) ema = data[data.length - period]; // Fallback if not enough for initial SMA
+            if (ema === null && data.length >= period) ema = data[data.length - period]; // Fallback if not enough for initial SMA
+            else if (ema === null) return null;
+
 
             for (let i = data.length - period; i < data.length; i++) {
                 ema = (data[i] * k) + (ema * (1 - k));
@@ -1903,7 +1905,7 @@
             return ema;
         }
         
-        function analyzeMACD(history, shortPeriod = 5, longPeriod = 10, signalPeriod = 4, weight = 0.08) {
+        function analyzeMACD(history, shortPeriod = 5, longPeriod = 10, signalPeriod = 4, weight = 0.06) { // Reduced weight
             const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null).reverse(); // Oldest first
             if (actualNumbers.length < longPeriod + signalPeriod) return null;
 
@@ -1913,7 +1915,6 @@
 
             const macdLine = emaShort - emaLong;
             
-            // For signal line, we need a history of MACD values
             const macdHistory = [];
             for(let i = longPeriod -1; i < actualNumbers.length; i++) {
                  const short = calculateEMA(actualNumbers.slice(0, i + 1), shortPeriod);
@@ -1926,8 +1927,8 @@
             if (signalLine === null) return null;
 
             let prediction = null;
-            if (macdLine > signalLine) prediction = "BIG"; // Bullish crossover
-            else if (macdLine < signalLine) prediction = "SMALL"; // Bearish crossover
+            if (macdLine > signalLine * 1.05) prediction = "BIG"; // Bullish crossover (with a small threshold)
+            else if (macdLine < signalLine * 0.95) prediction = "SMALL"; // Bearish crossover (with a small threshold)
             
             if (prediction) {
                 return { prediction, weight, source: "MACD" };
@@ -1935,7 +1936,7 @@
             return null;
         }
 
-        function analyzeBollingerBands(history, period = 10, stdDevMultiplier = 2, weight = 0.07) {
+        function analyzeBollingerBands(history, period = 10, stdDevMultiplier = 2, weight = 0.05) { // Reduced weight
             const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null); // Newest first
             if (actualNumbers.length < period) return null;
 
@@ -1951,8 +1952,8 @@
             const lastNumber = actualNumbers[0]; // Most recent number
 
             let prediction = null;
-            if (lastNumber > upperBand) prediction = "SMALL"; // Overbought, expect reversal to smaller
-            else if (lastNumber < lowerBand) prediction = "BIG"; // Oversold, expect reversal to larger
+            if (lastNumber > upperBand) prediction = "SMALL"; 
+            else if (lastNumber < lowerBand) prediction = "BIG"; 
 
             if (prediction) {
                 return { prediction, weight, source: "Bollinger" };
@@ -1960,30 +1961,30 @@
             return null;
         }
 
-        function analyzeNGramPatterns(history, n = 3, weight = 0.06) {
+        function analyzeNGramPatterns(history, n = 3, weight = 0.04) { // Reduced weight
             const outcomes = history.map(p => getBigSmallFromActual(p.actual)).filter(bs => bs);
-            if (outcomes.length < n + 1) return null; // Need enough for at least one n-gram and a following outcome
+            if (outcomes.length < n + 1) return null; 
 
-            const ngrams = {}; // Store n-gram -> {BIG: count, SMALL: count}
+            const ngrams = {}; 
             for (let i = 0; i <= outcomes.length - (n + 1); i++) {
-                const gram = outcomes.slice(i + 1, i + n + 1).join('-'); // The n-gram (past)
-                const nextOutcome = outcomes[i]; // The outcome that followed this n-gram (current)
+                const gram = outcomes.slice(i + 1, i + n + 1).join('-'); 
+                const nextOutcome = outcomes[i]; 
                 if (!ngrams[gram]) ngrams[gram] = { "BIG": 0, "SMALL": 0, "total": 0 };
                 ngrams[gram][nextOutcome]++;
                 ngrams[gram].total++;
             }
 
             const currentGram = outcomes.slice(0, n).join('-');
-            if (ngrams[currentGram] && ngrams[currentGram].total > 2) { // Require some occurrences
+            if (ngrams[currentGram] && ngrams[currentGram].total > 2) { 
                 if (ngrams[currentGram].BIG > ngrams[currentGram].SMALL * 1.5) return { prediction: "BIG", weight, source: `NGram-${n}` };
                 if (ngrams[currentGram].SMALL > ngrams[currentGram].BIG * 1.5) return { prediction: "SMALL", weight, source: `NGram-${n}` };
             }
             return null;
         }
         
-        function analyzeAutocorrelation(history, lag = 1, weight = 0.05) {
+        function analyzeAutocorrelation(history, lag = 1, weight = 0.03) { // Reduced weight
             const outcomes = history.map(p => getBigSmallFromActual(p.actual)).filter(bs => bs);
-            if (outcomes.length < lag + 10) return null; // Need a decent amount of data
+            if (outcomes.length < lag + 10) return null; 
 
             let matchCount = 0;
             let validPairs = 0;
@@ -1996,11 +1997,11 @@
                 }
             }
             if (validPairs === 0) return null;
-            const correlation = (matchCount / validPairs); // Simplified correlation: proportion of matches
+            const correlation = (matchCount / validPairs); 
 
-            if (correlation > 0.6) { // If strong positive correlation (tends to repeat)
+            if (correlation > 0.65) { 
                 return { prediction: outcomes[0], weight, source: "Autocorr" };
-            } else if (correlation < 0.4) { // If strong negative correlation (tends to alternate)
+            } else if (correlation < 0.35) { 
                 return { prediction: (outcomes[0] === "BIG" ? "SMALL" : "BIG"), weight, source: "Autocorr" };
             }
             return null;
@@ -2052,50 +2053,54 @@
             }
 
             let signals = [];
-            // Core signals
-            signals.push(analyzeFrequency(confirmedHistory, 5, 0.09 * getDynamicWeightAdjustment('Freq')));
-            signals.push(analyzeFrequency(confirmedHistory, 10, 0.11 * getDynamicWeightAdjustment('Freq')));
-            signals.push(analyzeFrequency(confirmedHistory, 20, 0.07 * getDynamicWeightAdjustment('Freq')));
-            signals.push(analyzeTransitions(confirmedHistory, 0.15 * getDynamicWeightAdjustment('Transition')));
-            signals.push(analyzeStreaks(confirmedHistory, 0.13 * getDynamicWeightAdjustment('StreakBreak')));
-            signals.push(analyzeAlternatingPatterns(confirmedHistory, 0.09 * getDynamicWeightAdjustment('Alt')));
-            signals.push(analyzeWeightedHistorical(confirmedHistory, 0.85, 0.11 * getDynamicWeightAdjustment('WeightedHist')));
+            // Core signals (weights slightly adjusted for balance)
+            signals.push(analyzeFrequency(confirmedHistory, 5, 0.10 * getDynamicWeightAdjustment('Freq')));
+            signals.push(analyzeFrequency(confirmedHistory, 10, 0.12 * getDynamicWeightAdjustment('Freq')));
+            signals.push(analyzeFrequency(confirmedHistory, 20, 0.08 * getDynamicWeightAdjustment('Freq')));
+            signals.push(analyzeTransitions(confirmedHistory, 0.16 * getDynamicWeightAdjustment('Transition')));
+            signals.push(analyzeStreaks(confirmedHistory, 0.14 * getDynamicWeightAdjustment('StreakBreak')));
+            signals.push(analyzeAlternatingPatterns(confirmedHistory, 0.10 * getDynamicWeightAdjustment('Alt')));
+            signals.push(analyzeWeightedHistorical(confirmedHistory, 0.85, 0.12 * getDynamicWeightAdjustment('WeightedHist')));
             
-            // Technical Indicator style signals
-            signals.push(analyzeRSI(confirmedHistory, 14, 0.11 * getDynamicWeightAdjustment('RSI'))); 
-            signals.push(analyzeMACD(confirmedHistory, 5, 10, 4, 0.07 * getDynamicWeightAdjustment('MACD')));
-            signals.push(analyzeBollingerBands(confirmedHistory, 10, 2, 0.06 * getDynamicWeightAdjustment('Bollinger')));
+            // Technical Indicator style signals (weights adjusted)
+            signals.push(analyzeRSI(confirmedHistory, 14, 0.10 * getDynamicWeightAdjustment('RSI'))); 
+            signals.push(analyzeMACD(confirmedHistory, 5, 10, 4, 0.06 * getDynamicWeightAdjustment('MACD')));
+            signals.push(analyzeBollingerBands(confirmedHistory, 10, 2, 0.05 * getDynamicWeightAdjustment('Bollinger')));
 
-            // Number/Sum based signals
-            signals.push(analyzeSumRanges(confirmedHistory, 3, 0.07 * getDynamicWeightAdjustment('SumRange')));
-            signals.push(analyzeHighLowRatio(confirmedHistory, 10, 0.07 * getDynamicWeightAdjustment('HighLowRatio')));
-            signals.push(analyzeSumFrequency(confirmedHistory, 5, 0.09 * getDynamicWeightAdjustment('SumFreq')));
-            signals.push(analyzeNumberDistribution(confirmedHistory, 10, 0.06 * getDynamicWeightAdjustment('NumDist')));
-            signals.push(analyzeConsecutiveNumbers(confirmedHistory, 5, 0.05 * getDynamicWeightAdjustment('ConsecutiveNum')));
-            signals.push(analyzeGapAnalysis(confirmedHistory, 5, 0.06 * getDynamicWeightAdjustment('GapAnalysis')));
+            // Number/Sum based signals (weights adjusted)
+            signals.push(analyzeSumRanges(confirmedHistory, 3, 0.06 * getDynamicWeightAdjustment('SumRange')));
+            signals.push(analyzeHighLowRatio(confirmedHistory, 10, 0.06 * getDynamicWeightAdjustment('HighLowRatio')));
+            signals.push(analyzeSumFrequency(confirmedHistory, 5, 0.08 * getDynamicWeightAdjustment('SumFreq')));
+            signals.push(analyzeNumberDistribution(confirmedHistory, 10, 0.05 * getDynamicWeightAdjustment('NumDist')));
+            signals.push(analyzeConsecutiveNumbers(confirmedHistory, 5, 0.04 * getDynamicWeightAdjustment('ConsecutiveNum')));
+            signals.push(analyzeGapAnalysis(confirmedHistory, 5, 0.05 * getDynamicWeightAdjustment('GapAnalysis')));
             
-            // Pattern and sequence signals
-            signals.push(analyzeNGramPatterns(confirmedHistory, 2, 0.05 * getDynamicWeightAdjustment('NGram'))); // 2-gram
-            signals.push(analyzeNGramPatterns(confirmedHistory, 3, 0.04 * getDynamicWeightAdjustment('NGram'))); // 3-gram (lower weight)
-            signals.push(analyzeAutocorrelation(confirmedHistory, 1, 0.04 * getDynamicWeightAdjustment('Autocorr')));
+            // Pattern and sequence signals (weights adjusted)
+            signals.push(analyzeNGramPatterns(confirmedHistory, 2, 0.04 * getDynamicWeightAdjustment('NGram'))); 
+            signals.push(analyzeNGramPatterns(confirmedHistory, 3, 0.03 * getDynamicWeightAdjustment('NGram'))); 
+            signals.push(analyzeAutocorrelation(confirmedHistory, 1, 0.03 * getDynamicWeightAdjustment('Autocorr')));
 
 
             signals = signals.filter(s => s !== null && s.prediction !== "SKIP" && s.weight > 0.01);
 
-            // Inter-Signal Confirmation (Meta-Analysis)
-            if (signals.length > 5) { // Only apply if enough base signals
+            // Inter-Signal Confirmation (Meta-Analysis) - Adjusted threshold
+            if (signals.length > 4) { 
                 let bigSignalCount = signals.filter(s => s.prediction === "BIG").length;
                 let smallSignalCount = signals.filter(s => s.prediction === "SMALL").length;
-                if (bigSignalCount > smallSignalCount * 2) { // Strong agreement for BIG
-                    signals.push({prediction: "BIG", weight: 0.1, source: "InterSignalConfirm"});
-                } else if (smallSignalCount > bigSignalCount * 2) { // Strong agreement for SMALL
-                    signals.push({prediction: "SMALL", weight: 0.1, source: "InterSignalConfirm"});
+                const totalSignalsForConfirm = bigSignalCount + smallSignalCount;
+                if (totalSignalsForConfirm > 0) {
+                    if (bigSignalCount / totalSignalsForConfirm > 0.65) { // If >65% agreement for BIG
+                        signals.push({prediction: "BIG", weight: 0.08, source: "InterSignalConfirm"});
+                    } else if (smallSignalCount / totalSignalsForConfirm > 0.65) { // If >65% agreement for SMALL
+                        signals.push({prediction: "SMALL", weight: 0.08, source: "InterSignalConfirm"});
+                    }
                 }
             }
 
 
             if (signals.length === 0) {
-                return { prediction: Math.random() > 0.5 ? "BIG" : "SMALL", confidence: 35, source: "NoClearSignals" }; // Reduced confidence
+                // Fallback if no signals, less confident than insufficient data
+                return { prediction: "BIG", confidence: 30, source: "NoClearSignals_Fallback" }; // Deterministic fallback
             }
 
             let bigScore = 0;
@@ -2113,25 +2118,25 @@
             let finalPrediction;
             if (bigScore > smallScore) finalPrediction = "BIG";
             else if (smallScore > bigScore) finalPrediction = "SMALL";
-            else finalPrediction = Math.random() > 0.5 ? "BIG" : "SMALL"; 
+            else finalPrediction = "BIG"; // Deterministic tie-breaker
 
-            let confidence = 35; // Base confidence
+            let confidence = 40; // Adjusted base confidence
             if (totalWeight > 0) {
                 const predominance = Math.abs(bigScore - smallScore) / totalWeight; 
                 confidence += predominance * 25; // Max 25 points from predominance
-                confidence += Math.min(contributingSources.size * 2.5, 25); // Max 25 points for agreement
+                confidence += Math.min(contributingSources.size * 2.0, 20); // Max 20 points for agreement
             }
 
-            confidence += Math.min(signals.length * 1, 15); // Max 15 for number of signals
+            confidence += Math.min(signals.length * 0.75, 13); // Max 13 for number of signals (adjusted)
 
             if (stability.reason !== "Trend appears stable enough for prediction" && stability.isStable) {
-                confidence *= 0.80; // Stronger penalty if minor stability issues
+                confidence *= 0.80; 
             }
 
-            if (!isAdvancedModeActive && confidence > 70) { // Cap confidence for normal mode
+            if (!isAdvancedModeActive && confidence > 70) { 
                 confidence = 70 + (confidence - 70) * 0.3;
             }
-            confidence = Math.min(Math.max(Math.floor(confidence), 25), 98); // Adjusted bounds
+            confidence = Math.min(Math.max(Math.floor(confidence), 30), 98); 
 
             return {
                 prediction: finalPrediction,
@@ -2629,3 +2634,4 @@
     </script>
 </body>
 </html>
+
