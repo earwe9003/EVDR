@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALPHA X AI - Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <style>
+        :root {
+            --bg-dark-primary: #1a202c; /* Dark Charcoal */
+            --bg-dark-secondary: #2d3748; /* Slightly Lighter Charcoal */
+            --bg-dark-tertiary: #171923; /* Even Darker for depth */
+            --text-light-primary: #edf2f7; /* Light Gray */
+            --text-light-secondary: #a0aec0; /* Medium Gray */
+            --accent-primary: #38b2ac; /* Teal */
+            --accent-secondary: #4299e1; /* Vibrant Blue */
+            --card-border-color: #4a5568; /* Dark Gray border */
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --shadow-accent-glow: rgba(56, 178, 172, 0.3); /* Teal glow */
+
+            /* Status Colors (Dark Theme Adapted) */
+            --win-color: #38a169; /* Green */
+            --loss-color: #e53e3e; /* Red */
+            --pending-color: #dd6b20; /* Orange */
+            --skipped-color: #718096; /* Gray */
+            --maintenance-text-color: #ecc94b; /* Yellow for maintenance */
+        }
+
+        body {
+            font-family: 'El Messiri', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark-primary), var(--bg-dark-secondary));
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            margin: 0;
+            padding: 0;
+            color: var(--text-light-primary);
+            display: flex; /* Initial state for login/maintenance centering */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        * {
+            color: var(--text-light-primary); /* Default text color */
+        }
+
+        /* Login Container Styles - Dark Theme */
+        #loginContainer, #maintenanceContainer { /* Grouped for similar initial display */
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+            animation: fadeInLogin 0.8s ease-in-out;
+            display: none; /* Initially hidden, controlled by JS */
+        }
+        #loginContainer.active, #maintenanceContainer.active {
+            display: block;
+        }
+
+
+        @keyframes fadeInLogin {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-card, .maintenance-card { /* Shared card style */
+            background: var(--bg-dark-secondary);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px var(--shadow-color);
+            padding: 2.5rem;
+            border: 1px solid var(--card-border-color);
+            text-align: center;
+        }
+        .maintenance-card i {
+            font-size: 3rem;
+            color: var(--maintenance-text-color);
+            margin-bottom: 1rem;
+        }
+        .maintenance-card h2 {
+            color: var(--maintenance-text-color);
+            margin-bottom: 0.5rem;
+        }
+
+
+        .login-title-svg-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 2rem auto;
+        }
+        .login-title-svg-container svg {
+            width: 100%;
+            height: auto;
+            max-height: 120px;
+        }
+        .login-title-svg-container text {
+            font-family: 'El Messiri', sans-serif;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            text-transform: uppercase;
+            animation: strokeLoginDark 5s infinite alternate;
+            stroke-width: 1.2;
+            stroke: var(--accent-primary); /* Teal stroke */
+            font-size: 60px;
+            fill: rgba(26, 32, 44, 0); /* Transparent dark bg */
+            letter-spacing: 1px;
+        }
+
+        @keyframes strokeLoginDark {
+            0% { fill: rgba(26, 32, 44, 0); stroke: var(--accent-primary); stroke-dashoffset: 25%; stroke-dasharray: 0 50%; stroke-width: 1.2; }
+            70% { fill: rgba(26, 32, 44, 0); stroke: var(--accent-secondary); }
+            80% { fill: rgba(26, 32, 44, 0); stroke: var(--accent-primary); stroke-width: 2.5; }
+            100% { fill: var(--text-light-primary); stroke: rgba(56, 178, 172, 0); stroke-dashoffset: -25%; stroke-dasharray: 50% 0; stroke-width: 0; }
+        }
+
+        .login-input-field {
+            background-color: rgba(45, 55, 72, 0.7); /* Darker input bg */
+            border: 1px solid var(--card-border-color);
+            color: var(--text-light-primary);
+            padding: 0.9rem 1.2rem;
+            border-radius: 1rem;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            font-size: 1rem;
+        }
+        .login-input-field:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px var(--shadow-accent-glow);
+            background-color: rgba(45, 55, 72, 0.9);
+        }
+
+        .login-btn-main {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-dark-tertiary); /* Dark text on bright button */
+            padding: 0.9rem 1.8rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+        }
+        .login-btn-main:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 18px var(--shadow-accent-glow);
+        }
+        .login-btn-main:disabled {
+            background: #4a5568; /* Dark gray disabled */
+            color: var(--text-light-secondary);
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .login-device-id-display {
+            background-color: rgba(45, 55, 72, 0.6);
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--accent-primary);
+            cursor: pointer;
+            border: 1px dashed var(--card-border-color);
+            transition: background-color 0.3s, transform 0.2s;
+            display: inline-block;
+            margin-top: 0.3rem;
+            font-weight: 500;
+        }
+        .login-device-id-display:hover {
+            background-color: rgba(74, 85, 104, 0.8);
+            transform: translateY(-1px);
+        }
+        .login-copy-feedback {
+            display: none;
+            color: var(--win-color); /* Green for success */
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            font-weight: 500;
+            opacity: 0;
+        }
+        .login-copy-feedback.show {
+            display: block;
+            animation: fadeInOutLoginFeedback 2.5s forwards;
+        }
+        @keyframes fadeInOutLoginFeedback {
+          0% { opacity: 0; transform: translateY(5px); }
+          20% { opacity: 1; transform: translateY(0); }
+          80% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-5px); }
+        }
+
+        /* App Container - Hidden by default */
+        #appContainer {
+            display: none; /* Initially hidden */
+            width: 100%;
+        }
+        #appContainer.active {
+            display: block; /* Show when active */
+        }
+
+        /* ALPHA X AI App Styles - Dark Theme */
+        .popup, .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(45, 55, 72, 0.95); /* Darker card bg with opacity */
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 6px 16px var(--shadow-color);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--accent-primary); /* Teal border */
+        }
+        .popup.active, .modal.active { display: block; }
+
+        .card {
+            transition: all 0.3s ease;
+            background: var(--bg-dark-secondary);
+            border-radius: 1.5rem;
+            box-shadow: 0 6px 12px var(--shadow-color);
+            backdrop-filter: blur(5px);
+            position: relative;
+            margin: 0.75rem;
+            overflow: hidden;
+            border: 1px solid var(--card-border-color);
+        }
+        .card:hover {
+            transform: translateY(-6px) scale(1.03);
+            box-shadow: 0 8px 16px var(--shadow-accent-glow);
+            border-color: var(--accent-primary);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        }
+        #appHeaderSvgContainer svg { width: 100%; height: auto; margin: 0 auto; display: block; }
+        #appHeaderSvgContainer svg text {
+            text-anchor: middle;
+            dominant-baseline: middle;
+            text-transform: uppercase;
+            animation: strokeAppHeaderDark 5s infinite alternate;
+            stroke-width: 1.2;
+            stroke: var(--accent-primary);
+            font-size: 130px;
+            fill: rgba(26, 32, 44, 0);
+        }
+        @media (max-width: 768px) {
+            #appHeaderSvgContainer svg text { font-size: 90px; }
+        }
+        @keyframes strokeAppHeaderDark {
+            0% { fill: rgba(26, 32, 44, 0); stroke: var(--accent-primary); stroke-dashoffset: 25%; stroke-dasharray: 0 50%; stroke-width: 1.2; }
+            70% { fill: rgba(26, 32, 44, 0); stroke: var(--accent-secondary); }
+            80% { fill: rgba(26, 32, 44, 0); stroke: var(--accent-primary); stroke-width: 2.5; }
+            100% { fill: var(--text-light-primary); stroke: rgba(56, 178, 172, 0); stroke-dashoffset: -25%; stroke-dasharray: 50% 0; stroke-width: 0; }
+        }
+
+        .history-container { display: flex; flex-direction: column; gap: 1rem; max-height: none; overflow: visible; position: relative; }
+        .history-item {
+            transition: all 0.3s ease; width: 100%; max-width: 100%; margin: 0; border-radius: 1.2rem;
+            background: var(--bg-dark-tertiary);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+            position: relative; overflow: hidden; padding: 1.2rem;
+            border-left: 4px solid transparent;
+        }
+        .history-item.win { border-left-color: var(--win-color); background: linear-gradient(135deg, rgba(56, 161, 105, 0.2), var(--bg-dark-tertiary)); }
+        .history-item.loss { border-left-color: var(--loss-color); background: linear-gradient(135deg, rgba(229, 62, 62, 0.2), var(--bg-dark-tertiary)); }
+        .history-item.pending { border-left-color: var(--pending-color); background: linear-gradient(135deg, rgba(221, 107, 32, 0.2), var(--bg-dark-tertiary)); }
+        .history-item.skipped { border-left-color: var(--skipped-color); background: linear-gradient(135deg, rgba(113, 128, 150, 0.2), var(--bg-dark-tertiary)); }
+        .history-item:hover { transform: scale(1.02); box-shadow: 0 6px 18px var(--shadow-accent-glow); }
+        .history-item.fade-out { animation: fadeOut 0.5s ease forwards; }
+        @keyframes fadeOut { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.95); height: 0; padding: 0; margin: 0; } }
+        .history-item .watermark {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 1.5rem; color: rgba(74, 85, 104, 0.2);
+            pointer-events: none; z-index: 0; text-transform: uppercase; font-weight: bold;
+        }
+        .small-dot {
+            position: absolute; width: 6px; height: 6px; background: var(--accent-secondary);
+            border-radius: 50%; animation: float 4s infinite; z-index: 1;
+        }
+        @keyframes float { 0% { transform: translate(0, 0); opacity: 0.7; } 50% { transform: translate(12px, -12px); opacity: 0.3; } 100% { transform: translate(0, 0); opacity: 0.7; } }
+
+        .delete-btn:hover { color: var(--accent-primary); transform: scale(1.3); }
+        .status-icon {
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; position: relative; overflow: hidden;
+        }
+        .status-icon::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            opacity: 0.1; background: radial-gradient(circle, currentColor 0%, transparent 70%);
+        }
+        .win-icon { color: var(--win-color); animation: pulseWin 1.5s infinite; }
+        .loss-icon { color: var(--loss-color); animation: pulseLoss 1s infinite; }
+        .pending-icon { color: var(--pending-color); animation: rotate 2s infinite linear; }
+        .skipped-icon { color: var(--skipped-color); animation: pulseSkip 1.5s infinite; }
+
+        .dashboard-card {
+            background: var(--bg-dark-tertiary);
+            border-radius: 1.5rem; padding: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px); transition: all 0.3s ease;
+            border: 1px solid var(--card-border-color);
+        }
+        .dashboard-card:hover { transform: translateY(-4px); box-shadow: 0 6px 14px var(--shadow-accent-glow); border-color: var(--accent-primary); }
+
+        .confidence-meter { height: 10px; background: var(--bg-dark-primary); border-radius: 5px; overflow: hidden; position: relative; }
+        .confidence-fill { height: 100%; background: var(--accent-primary); transition: width 0.5s ease; }
+
+        .navigation {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 350px; height: 70px; background: rgba(45, 55, 72, 0.9);
+            backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center;
+            border-radius: 1.5rem; box-shadow: 0 6px 12px var(--shadow-color); z-index: 1000;
+            border: 1px solid var(--card-border-color);
+        }
+        .navigation ul { display: flex; width: 300px; }
+        .navigation ul li { position: relative; list-style: none; width: 75px; height: 70px; z-index: 1; }
+        .navigation ul li a { position: relative; display: flex; justify-content: center; align-items: center; flex-direction: column; width: 100%; text-align: center; font-weight: 500; }
+        .navigation ul li a .icon { position: relative; display: block; line-height: 75px; font-size: 1.5em; text-align: center; transition: 0.5s; color: var(--text-light-secondary); }
+        .navigation ul li.active a .icon { transform: translateY(-32px); color: var(--accent-primary); }
+        .navigation ul li a .text { position: absolute; font-weight: 400; font-size: 0.75em; letter-spacing: 0.05em; transition: 0.5s; opacity: 0; transform: translateY(20px); color: var(--text-light-primary); }
+        .navigation ul li.active a .text { opacity: 1; transform: translateY(10px); color: var(--accent-primary); }
+
+        .indicator {
+            position: absolute; top: -50%; width: 70px; height: 70px;
+            background: var(--accent-primary);
+            border-radius: 50%; border: 6px solid var(--bg-dark-primary);
+            transition: 0.5s;
+        }
+        .indicator::before { content: ''; position: absolute; top: 50%; left: -22px; width: 20px; height: 20px; background: transparent; border-top-right-radius: 20px; box-shadow: 1px -10px 0 0 var(--bg-dark-primary); }
+        .indicator::after { content: ''; position: absolute; top: 50%; right: -22px; width: 20px; height: 20px; background: transparent; border-top-left-radius: 20px; box-shadow: -1px -10px 0 0 var(--bg-dark-primary); }
+
+        .mode-toggle { position: relative; display: inline-block; width: 60px; height: 30px; }
+        .mode-toggle input { opacity: 0; width: 0; height: 0; }
+        .mode-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-dark-primary); transition: .4s; border-radius: 34px; border: 1px solid var(--card-border-color); }
+        .mode-slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 3px; background-color: var(--text-light-secondary); transition: .4s; border-radius: 50%; }
+        input:checked + .mode-slider { background-color: var(--accent-primary); }
+        input:checked + .mode-slider:before { transform: translateX(30px); background-color: var(--bg-dark-primary); }
+        .mode-icons { position: absolute; top: 50%; transform: translateY(-50%); width: 100%; display: flex; justify-content: space-between; padding: 0 8px; pointer-events: none; }
+        .mode-icons i, .mode-icons span { font-size: 14px; color: var(--text-light-primary); }
+        input:checked ~ .mode-icons span:first-child, input:checked ~ .mode-icons i:first-child { color: var(--bg-dark-primary); }
+        input:not(:checked) ~ .mode-icons span:last-child, input:not(:checked) ~ .mode-icons i:last-child { color: var(--bg-dark-primary); }
+
+
+        .period-id { font-family: monospace; letter-spacing: 2px; font-size: 1.2rem; color: var(--accent-secondary); }
+        #currentPeriod, #currentResult {
+            border: none !important;
+            background-color: var(--bg-dark-tertiary) !important;
+            color: var(--text-light-primary) !important;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 1rem; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        button, .btn {
+            border-radius: 1rem;
+            background: var(--accent-secondary);
+            color: var(--bg-dark-tertiary);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+            padding: 0.6rem 1.2rem;
+            border: 1px solid var(--accent-primary);
+        }
+        button:hover, .btn:hover {
+            background: var(--accent-primary);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--shadow-accent-glow);
+        }
+        #deleteAllHistoryBtn { background: var(--loss-color); color: var(--text-light-primary); border: none;}
+        #deleteAllHistoryBtn:hover { background: #c53030; }
+        #cancelModalBtn { background: var(--skipped-color); color: var(--text-light-primary); border:none; }
+        #cancelModalBtn:hover { background: #4a5568; }
+
+
+        .bad-trend-indicator {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background-color: var(--loss-color);
+            color: var(--text-light-primary); padding: 10px 20px; border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 1050;
+            display: flex; align-items: center; gap: 10px; animation: pulseWarning 2s infinite;
+        }
+         @keyframes pulseWarning {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        .toast-login {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--accent-primary);
+            color: var(--bg-dark-tertiary);
+            padding: 1rem 1.8rem; border-radius: 1rem;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3); z-index: 2000;
+            font-size: 0.95rem; animation: toast-slide-in-out-login 5s ease-in-out forwards;
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+        @keyframes toast-slide-in-out-login {
+            0% { transform: translate(-50%, 100px); opacity: 0; }
+            10% { transform: translate(-50%, 0); opacity: 1; }
+            90% { transform: translate(-50%, 0); opacity: 1; }
+            100% { transform: translate(-50%, 100px); opacity: 0; }
+        }
+        .toast-login .icon { font-size: 1.3rem; }
+
+        /* Tailwind color overrides to match dark theme */
+        .text-slate-700 { color: var(--text-light-secondary) !important; }
+        .text-slate-600 { color: var(--text-light-secondary) !important; }
+        .text-slate-500 { color: var(--text-light-secondary) !important; }
+        .text-slate-400 { color: #718096 !important; } /* Similar to --skipped-color */
+        .text-gray-300 { color: var(--text-light-secondary) !important; }
+        .text-gray-400 { color: #718096 !important; } /* Similar to --skipped-color */
+        .text-gray-500 { color: var(--text-light-secondary) !important; } /* Mapped to --text-light-secondary */
+        .text-gray-700 { color: var(--text-light-primary) !important; }
+
+
+        .text-blue-500 { color: var(--accent-secondary) !important; }
+        .text-blue-600 { color: var(--accent-primary) !important; }
+        .text-blue-600:hover { color: var(--accent-secondary) !important; }
+
+        .text-green-500 { color: var(--win-color) !important; }
+        .text-red-500 { color: var(--loss-color) !important; }
+        .text-yellow-500 { color: var(--pending-color) !important; }
+        .text-orange-500 { color: var(--pending-color) !important; }
+
+        @media (max-width: 768px) {
+            #appHeaderSvgContainer svg text { font-size: 75px; }
+            .login-title-svg-container text { font-size: 50px; }
+        }
+         /* Ensure content sections are hidden by default and only active one is shown */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+
+        @media (max-width: 768px) {
+            .card { padding: 0.75rem; margin: 0.5rem; border-radius: 1rem; }
+            .grid-cols-2 { grid-template-columns: 1fr; } /* Forcing single column on smaller mobile for dashboard items */
+            .md\\:grid-cols-3 { grid-template-columns: 1fr 1fr; } /* Two columns for tablets */
+            .text-3xl { font-size: 1.5rem; }
+            .text-2xl { font-size: 1.25rem; }
+            .text-xl { font-size: 1rem; }
+            .text-lg { font-size: 0.875rem; }
+            .text-sm { font-size: 0.75rem; }
+            .p-6 { padding: 1rem; } /* Adjusted padding for cards on mobile */
+            .history-item { padding: 1rem; }
+            .navigation { width: 90%; max-width:300px; border-radius: 1rem; height: 65px; }
+            .navigation ul { width: 100%; max-width:250px; }
+            .navigation ul li { width: 25%; height: 65px;} /* Adjusted for 4 items */
+            .navigation ul li a .icon { line-height: 65px; font-size: 1.4em; }
+            .navigation ul li.active a .icon { transform: translateY(-28px); }
+             .navigation ul li a .text { font-size: 0.7em; transform: translateY(18px);}
+             .navigation ul li.active a .text { transform: translateY(8px); }
+            .indicator { width: 60px; height: 60px; top: -45%;}
+             .indicator::before { left: -20px; width: 18px; height: 18px; box-shadow: 1px -9px 0 0 var(--bg-dark-primary); }
+            .indicator::after { right: -20px; width: 18px; height: 18px; box-shadow: -1px -9px 0 0 var(--bg-dark-primary); }
+            .popup, .modal { max-width: 90%; padding: 1rem; border-radius: 1rem; }
+            .bad-trend-indicator { width: 90%; font-size: 0.9rem; padding: 8px 15px; }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="loginContainer" class="active">
+        <div class="login-card">
+            <div class="login-title-svg-container">
+                <svg viewBox="0 0 500 100"> <text x="50%" y="50%">ALPHA X AI</text> </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-center mb-6 text-slate-400">Secure Platform Access</h2>
+            <div class="space-y-6">
+                <div>
+                    <label for="accessKeyInput" class="block text-sm font-medium text-slate-300 mb-1">Access Key</label>
+                    <input id="accessKeyInput" type="text" class="login-input-field" placeholder="Enter your access key">
+                </div>
+                <button id="loginButton" class="login-btn-main w-full">
+                    <i class="fas fa-shield-alt"></i>Access Predictor
+                </button>
+                <div class="text-center mt-5">
+                    <p class="text-xs text-slate-400 mb-1">Your Device ID (Tap to Copy):</p>
+                    <span id="loginDeviceIdDisplay" class="login-device-id-display" role="button" tabindex="0" aria-label="Copy Device ID"></span>
+                    <p id="loginCopyFeedback" class="login-copy-feedback">Copied!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="maintenanceContainer">
+        <div class="maintenance-card">
+            <i class="fas fa-tools"></i>
+            <h2 class="text-2xl font-bold mb-2">Under Maintenance</h2>
+            <p id="maintenanceMessage" class="text-text-light-secondary">The platform is currently undergoing scheduled maintenance. Please try again later.</p>
+        </div>
+    </div>
+
+    <div id="appContainer" class="pb-20"> <div id="badTrendIndicator" class="bad-trend-indicator" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="badTrendMessage">Prediction temporarily disabled - Unstable trend detected</span>
+        </div>
+
+        <header id="appHeaderSvgContainer" class="text-center mt-0 mb-2 animate__animated animate__fadeInDown">
+            <svg viewBox="0 0 800 120">
+                <text x="50%" y="50%">ALPHA X AI</text>
+            </svg>
+        </header>
+
+        <div class="max-w-full mx-auto p-2 w-full">
+            <div class="max-w-4xl mx-auto p-2 w-full">
+                <div id="homeSection" class="content-section active">
+                    <div class="card mb-4 overflow-hidden gradient-bg animate__animated animate__zoomIn relative">
+                        <div class="bg-dark-tertiary bg-opacity-80 p-6 rounded-lg pulse-animation">
+                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"> <div class="relative">
+                                    <div class="pl-2">
+                                        <div class="flex items-center space-x-2 mb-2">
+                                            <i class="fas fa-calendar-alt text-2xl animate__animated animate__bounce text-accent-secondary"></i>
+                                            <h2 class="text-2xl font-bold" data-lang-key="period">Period</h2>
+                                        </div>
+                                        <p id="currentPeriod" class="text-2xl font-semibold p-3 rounded-lg shadow-inner period-id">-</p>
+                                    </div>
+                                </div>
+                                <div class="relative text-right">
+                                    <div class="pr-2">
+                                        <div class="flex items-center justify-end space-x-2 mb-2">
+                                            <h2 class="text-2xl font-bold" data-lang-key="prediction">Prediction</h2>
+                                            <i class="fas fa-poll text-2xl animate__animated animate__bounce text-accent-secondary"></i>
+                                        </div>
+                                        <p id="currentResult" class="text-2xl font-semibold p-3 rounded-lg shadow-inner">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-text-light-secondary" data-lang-key="confidence">Confidence</p>
+                                <div class="confidence-meter">
+                                    <div id="confidenceFill" class="confidence-fill" style="width: 0%"></div>
+                                </div>
+                                <p id="confidenceText" class="text-sm mt-1 text-text-light-secondary">0%</p>
+                            </div>
+                        </div>
+                        <div class="small-dot" style="top: 15%; left: 15%; animation-delay: 0.2s;"></div>
+                        <div class="small-dot" style="top: 85%; left: 85%; animation-delay: 0.8s;"></div>
+                        <div class="small-dot" style="top: 50%; left: 25%; animation-delay: 1.2s;"></div>
+                        <div class="small-dot" style="top: 20%; left: 80%; animation-delay: 1.6s;"></div>
+                    </div>
+
+                    <div class="card mb-4 p-6 animate__animated animate__fadeInUp relative">
+                        <h2 class="text-3xl font-bold text-center mb-4 relative text-accent-primary">
+                            <span class="relative z-10 pulse-animation" data-lang-key="analysis_dashboard">Analysis Dashboard</span>
+                            <span class="absolute top-1/2 left-0 w-full h-1 bg-accent-primary opacity-30 -translate-y-1/2 rounded-full"></span>
+                        </h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="dashboard-card animate__animated animate__fadeIn" style="animation-delay: 0s;">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-star text-lg text-accent-secondary"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="most_frequent_bs">Most Frequent (B/S)</p>
+                                        <p id="mostFrequentBigSmall" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card animate__animated animate__fadeIn" style="animation-delay: 0.1s;">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-arrow-down text-lg text-accent-secondary"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="least_frequent_bs">Least Frequent (B/S)</p>
+                                        <p id="leastFrequentBigSmall" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card animate__animated animate__fadeIn" style="animation-delay: 0.2s;">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-percentage text-lg text-accent-secondary"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="win_rate">Win Rate</p>
+                                        <p id="winRate" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card animate__animated animate__fadeIn" style="animation-delay: 0.3s;">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-trophy text-lg text-win-color"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="wins">Wins</p>
+                                        <p id="totalWinBets" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card animate__animated animate__fadeIn" style="animation-delay: 0.4s;">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-skull text-lg text-loss-color"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="losses">Losses</p>
+                                        <p id="totalLossBets" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card flex items-center justify-between animate__animated animate__fadeIn" style="animation-delay: 0.5s;">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-server text-lg text-accent-secondary"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="server_status">Server Status</p>
+                                        <p id="serverStatus" class="font-semibold text-text-light-primary" data-lang-key="connected">Connected</p>
+                                    </div>
+                                </div>
+                                <div id="serverStatusIndicator" class="w-3 h-3 bg-win-color rounded-full animate-ping"></div>
+                            </div>
+                        </div>
+                        <div class="small-dot" style="top: 10%; left: 10%; animation-delay: 0.3s;"></div>
+                        <div class="small-dot" style="top: 90%; left: 90%; animation-delay: 0.9s;"></div>
+                        <div class="small-dot" style="top: 30%; left: 70%; animation-delay: 1.5s;"></div>
+                    </div>
+                </div>
+
+                <div id="historySection" class="content-section">
+                    <div class="card p-6 animate__animated animate__fadeInUp relative">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-3xl font-bold text-center relative text-accent-primary">
+                                <span class="relative z-10 pulse-animation" data-lang-key="history">History</span>
+                                <span class="absolute top-1/2 left-0 w-full h-1 bg-accent-primary opacity-30 -translate-y-1/2 rounded-full"></span>
+                            </h2>
+                            <button id="deleteAllHistoryBtn" class="px-4 py-2 rounded-lg transition flex items-center">
+                                <i class="fas fa-trash-alt mr-2"></i><span data-lang-key="delete">Delete</span>
+                            </button>
+                        </div>
+                        <div id="history" class="history-container"></div>
+                        <div class="small-dot" style="top: 20%; left: 30%; animation-delay: 0.4s;"></div>
+                        <div class="small-dot" style="top: 80%; left: 70%; animation-delay: 0.9s;"></div>
+                        <div class="small-dot" style="top: 40%; left: 50%; animation-delay: 1.3s;"></div>
+                    </div>
+                </div>
+
+                <div id="statsSection" class="content-section">
+                    <div class="card p-6 animate__animated animate__fadeInUp relative">
+                        <h2 class="text-3xl font-bold text-center mb-4 relative text-accent-primary">
+                            <span class="relative z-10 pulse-animation" data-lang-key="statistics">Statistics</span>
+                             <span class="absolute top-1/2 left-0 w-full h-1 bg-accent-primary opacity-30 -translate-y-1/2 rounded-full"></span>
+                        </h2>
+                        <div class="stats-grid">
+                            <div class="dashboard-card">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-trophy text-win-color text-lg"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="total_wins">Total Wins</p>
+                                        <p id="statsTotalWins" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-skull text-loss-color text-lg"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="total_losses">Total Losses</p>
+                                        <p id="statsTotalLosses" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-percentage text-pending-color text-lg"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="win_rate">Win Rate</p>
+                                        <p id="statsWinRate" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-fire text-orange-400 text-lg"></i> <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="current_streak">Current Streak</p>
+                                        <p id="currentStreak" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dashboard-card">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-history text-accent-secondary text-lg"></i>
+                                    <div>
+                                        <p class="text-sm text-text-light-secondary" data-lang-key="last_five_actuals">Last 5 Actuals</p>
+                                        <p id="lastFiveActuals" class="text-xl font-bold text-text-light-primary">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="small-dot" style="top: 15%; left: 20%; animation-delay: 0.5s;"></div>
+                        <div class="small-dot" style="top: 85%; left: 80%; animation-delay: 1s;"></div>
+                    </div>
+                </div>
+
+                <div id="aboutSection" class="content-section">
+                    <div class="card p-6 animate__animated animate__fadeInUp relative">
+                        <h2 class="text-3xl font-bold text-center mb-6 relative text-accent-primary">
+                            <span class="relative z-10 pulse-animation" data-lang-key="about_aura_x_ai">About ALPHA X AI</span> <span class="absolute top-1/2 left-0 w-full h-1 bg-accent-primary opacity-30 -translate-y-1/2 rounded-full"></span>
+                        </h2>
+
+                        <div class="space-y-6 text-text-light-secondary"> <div>
+                                <h3 class="text-xl font-semibold mb-2 text-text-light-primary" data-lang-key="predictor_intro_title">Our Prediction Engine</h3>
+                                <p data-lang-key="predictor_intro_p1">
+                                    ALPHA X AI employs a sophisticated prediction engine designed to analyze trends and patterns from historical data. Our goal is to provide insightful predictions, but it's important to remember that these are based on statistical analysis and not guarantees of future outcomes.
+                                </p>
+                                <p class="mt-2" data-lang-key="predictor_intro_p2">
+                                    The system uses an advanced multi-model approach, combining numerous analytical techniques to enhance accuracy and adapt to changing conditions. This version incorporates enhanced pattern recognition, transitional analysis, and weighted historical data to provide more nuanced predictions.
+                                </p>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xl font-semibold mb-2 text-text-light-primary" data-lang-key="how_it_works_title">How It Works (Advanced)</h3>
+                                <ul class="list-disc list-inside space-y-1 pl-2">
+                                    <li data-lang-key="how_it_works_li1_adv"><strong>Multi-Period Frequency Analysis:</strong> Tracks "BIG" vs "SMALL" occurrences over short, medium, and long-term windows.</li>
+                                    <li data-lang-key="how_it_works_li2_adv"><strong>Transition Matrix Analysis:</strong> Calculates probabilities of B->S, S->B, B->B, S->S transitions.</li>
+                                    <li data-lang-key="how_it_works_li3_adv"><strong>Advanced Pattern Matching:</strong> Identifies recurring sequences (e.g., BSBS, BBSS) and alternating trends.</li>
+                                    <li data-lang-key="how_it_works_li4_adv"><strong>Streak Dynamics:</strong> Analyzes current and historical win/loss streaks for both outcomes, assessing continuation or reversal likelihood.</li>
+                                    <li data-lang-key="how_it_works_li5_adv"><strong>Consecutive Event Profiling:</strong> Monitors frequency of consecutive BIGs or SMALLs (e.g., BBB, SSSS).</li>
+                                    <li data-lang-key="how_it_works_li6_adv"><strong>Gap Distribution Analysis:</strong> Studies the typical number of periods between specific outcomes.</li>
+                                    <li data-lang-key="how_it_works_li7_adv"><strong>Volatility Indexing:</strong> Measures recent market stability; high volatility can lead to cautious "SKIP" predictions or lower confidence.</li>
+                                    <li data-lang-key="how_it_works_li8_adv"><strong>Weighted Signal Aggregation:</strong> Each analytical module generates a weighted signal. These are combined into an ensemble prediction.</li>
+                                    <li data-lang-key="how_it_works_li9_adv"><strong>Dynamic Confidence Scoring:</strong> Confidence reflects signal agreement, historical accuracy of similar patterns, and current volatility.</li>
+                                    <li data-lang-key="how_it_works_li10_adv"><strong>Adaptive Trend Protection:</strong> Automatically disables or flags predictions during highly unstable or unfavorable trends.</li>
+                                    <li data-lang-key="how_it_works_li11_adv"><strong>Relative Strength Index (RSI) Analysis:</strong> Measures the speed and change of recent number movements (0-9) to identify potential overbought (predict SMALL) or oversold (predict BIG) conditions.</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xl font-semibold mb-2 text-text-light-primary" data-lang-key="important_note_title">Important Note</h3>
+                                <p data-lang-key="important_note_p1">
+                                    All predictions provided by ALPHA X AI are for informational and entertainment purposes only. Past performance is not indicative of future results. Please use this information responsibly.
+                                </p>
+                            </div>
+
+                            <div class="pt-4 border-t border-card-border-color"> <h3 class="text-xl font-semibold mb-2 text-text-light-primary" data-lang-key="meet_the_team_title">Meet The Team</h3>
+                                <p data-lang-key="owner_info"><strong>Owner/Developer:</strong> @ALPHAXAIWEB</p> <p class="flex items-center">
+                                    <i class="fab fa-telegram text-accent-secondary mr-2"></i>
+                                    <a href="https://t.me/ALPHAXAIWEB" target="_blank" class="text-accent-primary hover:text-accent-secondary underline" data-lang-key="owner_telegram">Telegram Profile</a> </p>
+                            </div>
+
+                             <div class="pt-4 border-t border-card-border-color mt-6">
+                                <h3 class="text-xl font-semibold mb-3 text-text-light-primary" data-lang-key="general_settings_title">General Settings</h3>
+                                <div class="flex flex-col gap-4">
+                                     <div class="dashboard-card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-globe text-lg text-accent-secondary"></i>
+                                                <p class="text-sm" data-lang-key="language">Language</p>
+                                            </div>
+                                            <label class="mode-toggle">
+                                                <input type="checkbox" id="languageToggle">
+                                                <span class="mode-slider"></span>
+                                                <div class="mode-icons">
+                                                    <span>EN</span>
+                                                    <span>HI</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="dashboard-card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-bell text-lg text-accent-secondary"></i>
+                                                <p class="text-sm" data-lang-key="notifications">Notifications</p>
+                                            </div>
+                                            <label class="mode-toggle">
+                                                <input type="checkbox" id="notificationToggle">
+                                                <span class="mode-slider"></span>
+                                                <div class="mode-icons">
+                                                    <i class="fas fa-bell-slash"></i>
+                                                    <i class="fas fa-bell"></i>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="dashboard-card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-volume-up text-lg text-accent-secondary"></i>
+                                                <p class="text-sm" data-lang-key="sound">Sound</p>
+                                            </div>
+                                            <label class="mode-toggle">
+                                                <input type="checkbox" id="soundToggle" checked>
+                                                <span class="mode-slider"></span>
+                                                <div class="mode-icons">
+                                                    <i class="fas fa-volume-mute"></i>
+                                                    <i class="fas fa-volume-up"></i>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                     <div class="dashboard-card">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-cog text-lg text-accent-secondary"></i>
+                                                <p class="text-sm" data-lang-key="prediction_mode">Prediction Mode</p>
+                                            </div>
+                                            <label class="mode-toggle">
+                                                <input type="checkbox" id="predictionModeToggle"> <span class="mode-slider"></span>
+                                                <div class="mode-icons">
+                                                    <i class="fas fa-moon"></i> <i class="fas fa-bolt"></i> </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                     <div class="dashboard-card cursor-pointer hover:border-accent-primary transition" onclick="resetSettings()"> <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-undo text-lg text-accent-secondary"></i>
+                                                <p class="text-sm" data-lang-key="reset_settings">Reset Settings</p>
+                                            </div>
+                                            <span class="text-sm text-accent-primary" data-lang-key="reset">Reset</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="pt-4 border-t border-card-border-color mt-6">
+                                <h3 class="text-xl font-semibold mb-3 text-text-light-primary" data-lang-key="more_info_title">More Information</h3>
+                                <div class="flex flex-col gap-4">
+                                    <div onclick="openVideoPopup()" class="dashboard-card cursor-pointer hover:border-accent-primary transition">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fab fa-youtube text-lg text-red-500"></i> <p class="text-sm" data-lang-key="how_to_use">How To Use</p>
+                                            </div>
+                                            <span class="text-sm text-accent-primary" data-lang-key="watch_video">Watch Video</span>
+                                        </div>
+                                    </div>
+                                    <div onclick="window.open('https://alwaystruexyz.blogspot.com/2025/04/alpha-mx-pricing-plans-custom-css.html', '_blank')" class="dashboard-card cursor-pointer hover:border-accent-primary transition">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center space-x-2">
+                                                <i class="fas fa-shield-alt text-lg text-accent-secondary"></i>
+                                                <p class="text-sm" data-lang-key="privacy_policy">Privacy Policy</p>
+                                            </div>
+                                            <span class="text-sm text-accent-primary" data-lang-key="read_more">Read More</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="small-dot" style="top: 10%; left: 15%; animation-delay: 0.6s;"></div>
+                        <div class="small-dot" style="top: 90%; left: 85%; animation-delay: 1.1s;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <ul>
+                <li class="active">
+                    <a href="#" data-section="homeSection">
+                        <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
+                        <span class="text" data-lang-key="home">Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="historySection">
+                        <span class="icon"><ion-icon name="time-outline"></ion-icon></span>
+                        <span class="text" data-lang-key="history">History</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="statsSection">
+                        <span class="icon"><ion-icon name="bar-chart-outline"></ion-icon></span>
+                        <span class="text" data-lang-key="stats">Stats</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="aboutSection">
+                        <span class="icon"><ion-icon name="information-circle-outline"></ion-icon></span>
+                        <span class="text" data-lang-key="about">About</span>
+                    </a>
+                </li>
+                <div class="indicator"></div>
+            </ul>
+        </div>
+
+        <div id="videoPopup" class="popup">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-text-light-primary" data-lang-key="how_to_use_aura_x_ai">How To Use ALPHA X AI</h3> <button onclick="closeVideoPopup()" class="text-text-light-secondary hover:text-accent-primary">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="video-container">
+                <iframe id="youtubeVideo" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <div id="confirmModal" class="modal">
+            <h3 class="text-lg font-semibold mb-4 text-text-light-primary" data-lang-key="confirm_action">Confirm Action</h3>
+            <p id="modalMessage" class="mb-4 text-text-light-secondary"></p>
+            <div class="flex justify-end space-x-2">
+                <button id="cancelModalBtn" class="px-4 py-2 rounded-lg transition"> <span data-lang-key="cancel">Cancel</span></button>
+                <button id="confirmModalBtn" class="px-4 py-2 rounded-lg transition btn"> <span data-lang-key="confirm">Confirm</span></button>
+            </div>
+        </div>
+
+        <div id="streakBreakPopup" class="popup">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-semibold text-text-light-primary" data-lang-key="streak_alert">Win Streak Alert</h3>
+                <button onclick="document.getElementById('streakBreakPopup').classList.remove('active')"
+                        class="text-text-light-secondary hover:text-accent-primary">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="mb-4 text-text-light-secondary" id="streakBreakMessage"></p>
+            <div class="flex justify-between">
+                <button onclick="pausePredictionsFor30Minutes()" class="btn px-4 py-2 rounded-lg transition">
+                    <span data-lang-key="pause_predictions">Pause Predictions</span>
+                </button>
+                <button onclick="document.getElementById('streakBreakPopup').classList.remove('active')"
+                        id="cancelStreakModalBtn" class="px-4 py-2 rounded-lg transition"> <span data-lang-key="continue_predicting">Continue</span> </button>
+            </div>
+        </div>
+
+        <div id="badTrendPopup" class="popup">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-semibold text-text-light-primary" data-lang-key="trend_alert">Trend Alert</h3>
+                <button onclick="document.getElementById('badTrendPopup').classList.remove('active')"
+                        class="text-text-light-secondary hover:text-accent-primary">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <p class="mb-4 text-text-light-secondary" id="badTrendPopupMessage"></p>
+            <div class="flex justify-between">
+                <button onclick="disablePredictionsFor1Hour()" class="btn px-4 py-2 rounded-lg transition">
+                    <span data-lang-key="disable_predictions">Disable for 1 Hour</span>
+                </button>
+                <button onclick="document.getElementById('badTrendPopup').classList.remove('active')"
+                        id="cancelBadTrendModalBtn" class="px-4 py-2 rounded-lg transition"> <span data-lang-key="continue_predicting_anyway">Continue Anyway</span> </button>
+            </div>
+        </div>
+    </div>
+    <div id="loginToast" class="toast-login" style="display: none;">
+        <span class="icon"></span>
+        <p id="loginToastMessage" class="text-base"></p>
+    </div>
+
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script>
+        // --- Firebase Configuration (User Provided) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAV8WCu5kXbs85NtYiwiOtiAsYQ72SA27M", // Replace with your actual API key
+            authDomain: "aipredictor-cf4b8.firebaseapp.com",
+            databaseURL: "https://aipredictor-cf4b8-default-rtdb.firebaseio.com",
+            projectId: "aipredictor-cf4b8",
+            storageBucket: "aipredictor-cf4b8.appspot.com", // Corrected storageBucket format
+            messagingSenderId: "1036472549306",
+            appId: "1:1036472549306:web:dc3630c08d41f84369a783",
+            measurementId: "G-0YR80TMFPX"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- Admin Keys (Placeholder - replace with actual secure keys if needed) ---
+        const HARDCODED_ADMIN_KEYS = ["ALPHA_ADMIN_BYPASS_001", "AXAI_SUPER_KEY_777"];
+
+        // --- Page State Management ---
+        const loginContainer = document.getElementById('loginContainer');
+        const appContainer = document.getElementById('appContainer');
+        const maintenanceContainer = document.getElementById('maintenanceContainer');
+        const maintenanceMessageEl = document.getElementById('maintenanceMessage');
+
+        function showLoginPage() {
+            loginContainer.classList.add('active');
+            appContainer.classList.remove('active');
+            maintenanceContainer.classList.remove('active');
+            document.body.style.justifyContent = 'center';
+            document.body.style.alignItems = 'center';
+        }
+
+        function showAppPage() {
+            loginContainer.classList.remove('active');
+            maintenanceContainer.classList.remove('active');
+            appContainer.classList.add('active');
+
+            document.body.style.justifyContent = 'flex-start'; // Allow app to fill height
+            document.body.style.alignItems = 'stretch'; // Allow app to fill height
+
+            // Explicitly set initial section visibility for the app
+            const allAppSections = document.querySelectorAll('#appContainer .content-section');
+            allAppSections.forEach(section => {
+                if (section.id === 'homeSection') {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+            // Also ensure the bottom navigation reflects "Home" as active
+            const homeNavLi = document.querySelector('.navigation ul li a[data-section="homeSection"]')?.closest('li');
+            if (homeNavLi) {
+                document.querySelectorAll('.navigation ul li').forEach(li => li.classList.remove('active'));
+                homeNavLi.classList.add('active');
+                 const navIndicator = document.querySelector('.navigation .indicator');
+                 if(navIndicator) {
+                    const activeIndex = Array.from(homeNavLi.parentElement.children).indexOf(homeNavLi);
+                    navIndicator.style.transform = `translateX(calc(${homeNavLi.offsetWidth}px * ${activeIndex}))`;
+                 }
+            }
+        }
+
+        function showMaintenancePage(message) {
+            loginContainer.classList.remove('active');
+            appContainer.classList.remove('active');
+            if (maintenanceMessageEl) {
+                maintenanceMessageEl.textContent = message || "The platform is currently undergoing scheduled maintenance. Please try again later.";
+            }
+            maintenanceContainer.classList.add('active');
+            document.body.style.justifyContent = 'center';
+            document.body.style.alignItems = 'center';
+        }
+
+
+        // --- Login Logic ---
+        const accessKeyInput = document.getElementById('accessKeyInput');
+        const loginButton = document.getElementById('loginButton');
+        const loginDeviceIdDisplay = document.getElementById('loginDeviceIdDisplay');
+        const loginCopyFeedback = document.getElementById('loginCopyFeedback');
+        const loginToast = document.getElementById('loginToast');
+        const loginToastMessage = document.getElementById('loginToastMessage');
+        const loginToastIcon = loginToast.querySelector('.icon');
+
+
+        function generateDeviceId() {
+            const randomPart = Math.random().toString(36).substring(2, 10).toUpperCase();
+            return `AXAI-${randomPart}`;
+        }
+
+        function getDeviceId() {
+            let deviceId = localStorage.getItem("alphaXAiDeviceId");
+            if (!deviceId) {
+                deviceId = generateDeviceId();
+                localStorage.setItem("alphaXAiDeviceId", deviceId);
+            }
+            return deviceId;
+        }
+
+        function copyLoginDeviceId() {
+            const deviceIdText = loginDeviceIdDisplay.textContent;
+            const textArea = document.createElement("textarea");
+            textArea.value = deviceIdText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                loginCopyFeedback.classList.add('show');
+                setTimeout(() => loginCopyFeedback.classList.remove('show'), 2000);
+                showLoginToast("Device ID Copied!", "info");
+            } catch (err) {
+                console.error('Failed to copy Device ID with execCommand:', err);
+                navigator.clipboard.writeText(deviceIdText)
+                    .then(() => {
+                        loginCopyFeedback.classList.add('show');
+                        setTimeout(() => loginCopyFeedback.classList.remove('show'), 2000);
+                        showLoginToast("Device ID Copied!", "info");
+                    })
+                    .catch(clipErr => {
+                        console.error('Failed to copy Device ID with navigator.clipboard:', clipErr);
+                        showLoginToast("Failed to copy ID.", "error");
+                    });
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showLoginToast(message, type = "success") {
+            if (!loginToast || !loginToastMessage || !loginToastIcon) return;
+
+            loginToastMessage.textContent = message;
+            loginToast.className = 'toast-login';
+            loginToastIcon.className = 'icon fas';
+
+            if (type === "error") {
+                loginToast.style.backgroundColor = "var(--loss-color)";
+                loginToast.style.color = "var(--text-light-primary)";
+                loginToastIcon.classList.add('fa-times-circle');
+            } else if (type === "info") {
+                loginToast.style.backgroundColor = "var(--accent-secondary)";
+                loginToast.style.color = "var(--bg-dark-tertiary)";
+                loginToastIcon.classList.add('fa-info-circle');
+            } else { // Default success
+                loginToast.style.backgroundColor = "var(--win-color)";
+                loginToast.style.color = "var(--text-light-primary)";
+                loginToastIcon.classList.add('fa-check-circle');
+            }
+
+            loginToast.style.display = 'flex';
+            void loginToast.offsetWidth;
+
+            setTimeout(() => {
+                loginToast.style.display = 'none';
+            }, 4500);
+        }
+
+
+        async function handleLogin() {
+            loginButton.disabled = true;
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...';
+
+            const key = accessKeyInput.value.trim();
+            const deviceId = getDeviceId();
+
+            if (!key) {
+                showLoginToast("Access Key cannot be empty.", "error");
+                loginButton.disabled = false;
+                loginButton.innerHTML = '<i class="fas fa-shield-alt"></i> Access Predictor';
+                return;
+            }
+
+            try {
+                // 1. Check Maintenance Mode from Firebase (Path from admin.html)
+                const maintenanceStatusRef = db.ref("maintenanceStatus/status");
+                const maintenanceMessageRef = db.ref("maintenanceStatus/message");
+
+                const maintenanceStatusSnapshot = await maintenanceStatusRef.get();
+                const isMaintenanceActive = maintenanceStatusSnapshot.val() === true;
+
+                let isHardcodedAdmin = HARDCODED_ADMIN_KEYS.includes(key);
+                let isAdminKeyInDB = false;
+                let keyData = null;
+                let keyPath = null; // To store the path of the validated key ('accessKeysUser/' or 'accessKeysAdmin/')
+
+                // Check if the entered key is a DB-managed admin key
+                const adminKeyRef = db.ref("accessKeysAdmin/" + key); // Path from admin.html
+                const adminKeySnapshot = await adminKeyRef.get();
+                if (adminKeySnapshot.exists()) {
+                    const adminData = adminKeySnapshot.val();
+                    // Ensure admin keys also have an expiry and isAdmin flag as per admin.html logic
+                    if (adminData.isAdmin === true && (!adminData.expiry || Date.now() <= adminData.expiry)) {
+                        isAdminKeyInDB = true;
+                        keyData = adminData;
+                        keyPath = "accessKeysAdmin/" + key;
+                    }
+                }
+
+                // If maintenance is active and the key is not an admin key (either hardcoded or from DB)
+                if (isMaintenanceActive && !isHardcodedAdmin && !isAdminKeyInDB) {
+                    const maintenanceMessageSnapshot = await maintenanceMessageRef.get();
+                    const message = maintenanceMessageSnapshot.val() || "The platform is currently under maintenance. Please try again later.";
+                    showMaintenancePage(message);
+                    loginButton.disabled = false;
+                    loginButton.innerHTML = '<i class="fas fa-shield-alt"></i> Access Predictor';
+                    return;
+                }
+
+                // If not already identified as a DB admin key, check user keys
+                if (!isAdminKeyInDB) {
+                    const userKeyRef = db.ref("accessKeysUser/" + key); // Path from admin.html
+                    const userKeySnapshot = await userKeyRef.get();
+                    if (userKeySnapshot.exists()) {
+                        keyData = userKeySnapshot.val();
+                        keyPath = "accessKeysUser/" + key;
+                    }
+                }
+
+                // If keyData is still null, the key was not found in user or admin paths (and not hardcoded admin)
+                if (!keyData && !isHardcodedAdmin) {
+                    showLoginToast("Invalid Access Key.", "error");
+                    loginButton.disabled = false;
+                    loginButton.innerHTML = '<i class="fas fa-shield-alt"></i> Access Predictor';
+                    return;
+                }
+
+                // If keyData was found (either user or admin from DB)
+                if (keyData) {
+                    if (keyData.expiry && Date.now() > keyData.expiry) {
+                        showLoginToast("Access Key has expired.", "error");
+                        loginButton.disabled = false;
+                        loginButton.innerHTML = '<i class="fas fa-shield-alt"></i> Access Predictor';
+                        return;
+                    }
+
+                    // Device ID check only for user keys (keyPath will indicate if it's a user key)
+                    // Admin keys (from DB or hardcoded) bypass device ID check
+                    if (keyPath === ("accessKeysUser/" + key) && keyData.deviceId && keyData.deviceId !== deviceId && !isHardcodedAdmin && !isAdminKeyInDB) {
+                        showLoginToast("Key linked to another device.", "error");
+                        loginButton.disabled = false;
+                        loginButton.innerHTML = '<i class="fas fa-shield-alt"></i> Access Predictor';
+                        return;
+                    }
+
+                    // Update lastLogin and deviceId (if applicable) only for keys found in DB
+                    const updates = { lastLogin: firebase.database.ServerValue.TIMESTAMP };
+                    if ((keyPath === ("accessKeysUser/" + key) && !keyData.deviceId) ||
+                        (isAdminKeyInDB && !keyData.deviceId)) { // Bind deviceId if admin key doesn't have one yet
+                        updates.deviceId = deviceId;
+                    }
+                    if (keyPath) { // Ensure keyPath is valid (key was found in DB)
+                       await db.ref(keyPath).update(updates);
+                    }
+                }
+                // If it's a hardcoded admin key and not found in DB, no DB update is performed for it, but access is granted.
+
+                showLoginToast("Login Successful! Loading Predictor...", "success");
+                localStorage.setItem('alphaXAiAccessKey', key);
+                localStorage.setItem('alphaXAiUserType', (isAdminKeyInDB || isHardcodedAdmin) ? 'admin' : 'user');
+
+                showAppPage();
+                initializeAppPredictor();
+
+            } catch (error) {
+                console.error("Login Error:", error);
+                showLoginToast("Login failed. Check connection or key. Ensure DB rules allow access.", "error");
+                loginButton.disabled = false;
+                loginButton.innerHTML = '<i class="fas fa-shield-alt"></i> Access Predictor';
+            }
+        }
+
+
+        // --- ALPHA X AI Predictor App Logic ---
+        let currentLanguage = localStorage.getItem('alphaXAiLanguage') || 'en';
+        let isSoundEnabled = localStorage.getItem('alphaXAiSound') === null ? true : localStorage.getItem('alphaXAiSound') === 'true';
+        let isNotificationsEnabled = localStorage.getItem('alphaXAiNotifications') === 'true' || false;
+        let isAdvancedModeActive = localStorage.getItem('alphaXAiPredictionMode') === 'advanced' || true;
+        let lastFetchedPeriod = null;
+        let appHistory = JSON.parse(localStorage.getItem('alphaXAiHistory')) || [];
+        let currentStreak = 0;
+        let isPredictionsDisabled = localStorage.getItem('alphaXAiPredictionsDisabled') === 'true' || false;
+        let predictionsDisabledUntil = parseInt(localStorage.getItem('alphaXAiPredictionsDisabledUntil')) || 0;
+        let signalPerformance = {}; // To store recent performance of signal types
+
+        const translations = {
+            en: {
+                period: "Period", prediction: "Prediction", confidence: "Confidence",
+                analysis_dashboard: "Analysis Dashboard", most_frequent_bs: "Most Frequent (B/S)",
+                least_frequent_bs: "Least Frequent (B/S)", win_rate: "Win Rate", wins: "Wins", losses: "Losses",
+                server_status: "Server Status", connected: "Connected", disconnected: "Disconnected",
+                history: "History", delete: "Delete", statistics: "Statistics", total_wins: "Total Wins",
+                total_losses: "Total Losses", current_streak: "Current Streak", last_five_actuals: "Last 5 Actuals",
+                about: "About", about_aura_x_ai: "About ALPHA X AI",
+                predictor_intro_title: "Our Prediction Engine",
+                predictor_intro_p1: "ALPHA X AI employs a sophisticated prediction engine designed to analyze trends and patterns from historical data. Our goal is to provide insightful predictions, but it's important to remember that these are based on statistical analysis and not guarantees of future outcomes.",
+                predictor_intro_p2: "The system uses an advanced multi-model approach, combining numerous analytical techniques to enhance accuracy and adapt to changing conditions. This version incorporates enhanced pattern recognition, transitional analysis, and weighted historical data to provide more nuanced predictions.",
+                how_it_works_title: "How It Works (Advanced)",
+                how_it_works_li1_adv: "<strong>Multi-Period Frequency Analysis:</strong> Tracks \"BIG\" vs \"SMALL\" occurrences over short, medium, and long-term windows.",
+                how_it_works_li2_adv: "<strong>Transition Matrix Analysis:</strong> Calculates probabilities of B->S, S->B, B->B, S->S transitions.",
+                how_it_works_li3_adv: "<strong>Advanced Pattern Matching:</strong> Identifies recurring sequences (e.g., BSBS, BBSS) and alternating trends.",
+                how_it_works_li4_adv: "<strong>Streak Dynamics:</strong> Analyzes current and historical win/loss streaks for both outcomes, assessing continuation or reversal likelihood.",
+                how_it_works_li5_adv: "<strong>Consecutive Event Profiling:</strong> Monitors frequency of consecutive BIGs or SMALLs (e.g., BBB, SSSS).",
+                how_it_works_li6_adv: "<strong>Gap Distribution Analysis:</strong> Studies the typical number of periods between specific outcomes.",
+                how_it_works_li7_adv: "<strong>Volatility Indexing:</strong> Measures recent market stability; high volatility can lead to cautious \"SKIP\" predictions or lower confidence.",
+                how_it_works_li8_adv: "<strong>Weighted Signal Aggregation:</strong> Each analytical module generates a weighted signal. These are combined into an ensemble prediction.",
+                how_it_works_li9_adv: "<strong>Dynamic Confidence Scoring:</strong> Confidence reflects signal agreement, historical accuracy of similar patterns, and current volatility.",
+                how_it_works_li10_adv: "<strong>Adaptive Trend Protection:</strong> Automatically disables or flags predictions during highly unstable or unfavorable trends.",
+                how_it_works_li11_adv: "<strong>Relative Strength Index (RSI) Analysis:</strong> Measures the speed and change of recent number movements (0-9) to identify potential overbought (predict SMALL) or oversold (predict BIG) conditions.",
+                important_note_title: "Important Note",
+                important_note_p1: "All predictions provided by ALPHA X AI are for informational and entertainment purposes only. Past performance is not indicative of future results. Please use this information responsibly.",
+                meet_the_team_title: "Meet The Team", owner_info: "<strong>Owner/Developer:</strong> @ALPHAXAIWEB", owner_telegram: "Telegram Profile",
+                general_settings_title: "General Settings", more_info_title: "More Information", status: "Status",
+                language: "Language", notifications: "Notifications", sound: "Sound", reset_settings: "Reset Settings",
+                reset: "Reset", prediction_mode: "Prediction Mode", how_to_use: "How To Use", watch_video: "Watch Video",
+                privacy_policy: "Privacy Policy", read_more: "Read More", how_to_use_aura_x_ai: "How To Use ALPHA X AI",
+                confirm_action: "Confirm Action", cancel: "Cancel", confirm: "Confirm", pending: "Pending",
+                win: "Win", loss: "Loss", delete_item_confirm: "Are you sure you want to delete this history item?",
+                delete_all_confirm: "Are you sure you want to delete all history items?",
+                reset_settings_confirm: "Are you sure you want to reset all settings to default?",
+                api_error: "API Error. Please try again later.", fetching_data: "Fetching data...",
+                streak_alert: "Win Streak Alert", trend_alert: "Trend Alert", pause_predictions: "Pause Predictions",
+                disable_predictions: "Disable Predictions", continue_predicting: "Continue", continue_predicting_anyway: "Continue Anyway",
+                predictions_paused: "Predictions Paused", predictions_disabled: "Predictions Disabled",
+                resume_predictions: "Resume Predictions",
+                unstable_trend_detected: "Unstable trend detected - Predictions temporarily disabled",
+                bad_trend_message: "The current trend analysis shows unstable patterns. Predictions are temporarily disabled to protect against potential losses.",
+                trend_will_auto_resume: "Predictions will automatically resume when the trend stabilizes.",
+                no_history: "No history yet."
+            },
+            hi: {
+                period: "अवधि", prediction: "भविष्यवाणी", confidence: "आत्मविश्वास",
+                analysis_dashboard: "विश्लेषण डैशबोर्ड", most_frequent_bs: "सबसे लगातार (बड़ा/छोटा)",
+                least_frequent_bs: "कम से कम लगातार (बड़ा/छोटा)", win_rate: "जीत दर", wins: "जीत", losses: "हार",
+                server_status: "सर्वर स्थिति", connected: "जुड़ा हुआ", disconnected: "डिस्कनेक्ट किया गया",
+                history: "इतिहास", delete: "हटाएं", statistics: "आंकड़े", total_wins: "कुल जीत",
+                total_losses: "कुल हार", current_streak: "वर्तमान स्ट्रीक", last_five_actuals: "अंतिम 5 वास्तविक",
+                about: "विवरण", about_aura_x_ai: "अल्फा एक्स एआई के बारे में",
+                predictor_intro_title: "हमारा भविष्यवाणी इंजन",
+                predictor_intro_p1: "अल्फा एक्स एआई एक परिष्कृत भविष्यवाणी इंजन का उपयोग करता है जो ऐतिहासिक डेटा से रुझानों और पैटर्न का विश्लेषण करने के लिए डिज़ाइन किया गया है। हमारा लक्ष्य अंतर्दृष्टिपूर्ण भविष्यवाणियां प्रदान करना है, लेकिन यह याद रखना महत्वपूर्ण है कि ये सांख्यिकीय विश्लेषण पर आधारित हैं और भविष्य के परिणामों की गारंटी नहीं हैं।",
+                predictor_intro_p2: "यह प्रणाली भविष्यवाणियां उत्पन्न करने के लिए एक उन्नत बहु-मॉडल दृष्टिकोण का उपयोग करती है, सटीकता बढ़ाने और बदलती परिस्थितियों के अनुकूल होने के लिए कई विश्लेषणात्मक तकनीकों का संयोजन करती है। यह संस्करण अधिक सूक्ष्म भविष्यवाणियां प्रदान करने के लिए उन्नत पैटर्न पहचान, संक्रमणकालीन विश्लेषण और भारित ऐतिहासिक डेटा को शामिल करता है।",
+                how_it_works_title: "यह कैसे काम करता है (उन्नत)",
+                how_it_works_li1_adv: "<strong>बहु-अवधि आवृत्ति विश्लेषण:</strong> छोटी, मध्यम और लंबी अवधि की खिड़कियों पर \"बड़ा\" बनाम \"छोटा\" घटनाओं को ट्रैक करता है।",
+                how_it_works_li2_adv: "<strong>संक्रमण मैट्रिक्स विश्लेषण:</strong> B->S, S->B, B->B, S->S संक्रमणों की संभावनाओं की गणना करता है।",
+                how_it_works_li3_adv: "<strong>उन्नत पैटर्न मिलान:</strong> आवर्ती अनुक्रमों (जैसे, BSBS, BBSS) और वैकल्पिक प्रवृत्तियों की पहचान करता है।",
+                how_it_works_li4_adv: "<strong>स्ट्रीक गतिशीलता:</strong> दोनों परिणामों के लिए वर्तमान और ऐतिहासिक जीत/हार की लकीरों का विश्लेषण करता है, निरंतरता या उत्क्रमण की संभावना का आकलन करता है।",
+                how_it_works_li5_adv: "<strong>लगातार घटना प्रोफाइलिंग:</strong> लगातार बड़े या छोटे (जैसे, BBB, SSSS) की आवृत्ति पर नज़र रखता है।",
+                how_it_works_li6_adv: "<strong>अंतराल वितरण विश्लेषण:</strong> विशिष्ट परिणामों के बीच अवधियों की विशिष्ट संख्या का अध्ययन करता है।",
+                how_it_works_li7_adv: "<strong>अस्थिरता अनुक्रमण:</strong> हाल की बाजार स्थिरता को मापता है; उच्च अस्थिरता सतर्क \"छोड़ें\" भविष्यवाणियां या कम आत्मविश्वास का कारण बन सकती है।",
+                how_it_works_li8_adv: "<strong>भारित सिग्नल एकत्रीकरण:</strong> प्रत्येक विश्लेषणात्मक मॉड्यूल एक भारित सिग्नल उत्पन्न करता है। इन्हें एक सामूहिक भविष्यवाणी में संयोजित किया जाता है।",
+                how_it_works_li9_adv: "<strong>गतिशील आत्मविश्वास स्कोरिंग:</strong> आत्मविश्वास सिग्नल समझौते, समान पैटर्न की ऐतिहासिक सटीकता और वर्तमान अस्थिरता को दर्शाता है।",
+                how_it_works_li10_adv: "<strong>अनुकूली प्रवृत्ति संरक्षण:</strong> अत्यधिक अस्थिर या प्रतिकूल प्रवृत्तियों के दौरान स्वचालित रूप से भविष्यवाणियां को अक्षम या फ़्लैग करता है।",
+                how_it_works_li11_adv: "<strong>रिलेटिव स्ट्रेंथ इंडेक्स (RSI) विश्लेषण:</strong> हालिया संख्या गतिविधियों (0-9) की गति और परिवर्तन को मापता है ताकि संभावित ओवरबॉट (SMALL की भविष्यवाणी) या ओवरसोल्ड (BIG की भविष्यवाणी) स्थितियों की पहचान की जा सके।",
+                important_note_title: "महत्वपूर्ण लेख",
+                important_note_p1: "अल्फा एक्स एआई द्वारा प्रदान की गई सभी भविष्यवाणियां केवल सूचनात्मक और मनोरंजन प्रयोजनों के लिए हैं। पिछला प्रदर्शन भविष्य के परिणामों का संकेतक नहीं है। कृपया इस जानकारी का जिम्मेदारी से उपयोग करें।",
+                meet_the_team_title: "टीम से मिलें", owner_info: "<strong>मालिक/डेवलपर:</strong> @ALPHAXAIWEB", owner_telegram: "टेलीग्राम प्रोफाइल",
+                general_settings_title: "सामान्य सेटिंग्स", more_info_title: "और जानकारी", status: "स्थिति",
+                language: "भाषा", notifications: "सूचनाएं", sound: "ध्वनि", reset_settings: "सेटिंग्स रीसेट करें",
+                reset: "रीसेट", prediction_mode: "भविष्यवाणी मोड", how_to_use: "उपयोग कैसे करें", watch_video: "वीडियो देखें",
+                privacy_policy: "गोपनीयता नीति", read_more: "और पढ़ें", how_to_use_aura_x_ai: "अल्फा एक्स एआई का उपयोग कैसे करें",
+                confirm_action: "कार्रवाई की पुष्टि करें", cancel: "रद्द करें", confirm: "पुष्टि करें", pending: "लंबित",
+                win: "जीत", loss: "हार", delete_item_confirm: "क्या आप निश्चित रूप से इस इतिहास आइटम को हटाना चाहते हैं?",
+                delete_all_confirm: "क्या आप निश्चित रूप से सभी इतिहास आइटम हटाना चाहते हैं?",
+                reset_settings_confirm: "क्या आप निश्चित रूप से सभी सेटिंग्स को डिफ़ॉल्ट पर रीसेट करना चाहते हैं?",
+                api_error: "एपीआई त्रुटि। कृपया बाद में पुन: प्रयास करें।", fetching_data: "डेटा प्राप्त किया जा रहा है...",
+                streak_alert: "जीत की लकीर चेतावनी", trend_alert: "ट्रेंड चेतावनी", pause_predictions: "भविष्यवाणियाँ रोकें",
+                disable_predictions: "भविष्यवाणियाँ अक्षम करें", continue_predicting: "जारी रखें", continue_predicting_anyway: "वैसे भी जारी रखें",
+                predictions_paused: "भविष्यवाणियाँ रोक दी गई हैं", predictions_disabled: "भविष्यवाणियाँ अक्षम कर दी गई हैं",
+                resume_predictions: "भविष्यवाणियाँ फिर से शुरू करें",
+                unstable_trend_detected: "अस्थिर ट्रेंड का पता चला - भविष्यवाणियाँ अस्थायी रूप से अक्षम हैं",
+                bad_trend_message: "वर्तमान ट्रेंड विश्लेषण अस्थिर पैटर्न दिखाता है। संभावित नुकसान से बचाने के लिए भविष्यवाणियाँ अस्थायी रूप से अक्षम कर दी गई हैं।",
+                trend_will_auto_resume: "ट्रेंड स्थिर होने पर भविष्यवाणियाँ स्वचालित रूप से फिर से शुरू हो जाएंगी।",
+                no_history: "अभी तक कोई इतिहास नहीं है।"
+            }
+        };
+
+        // DOM Elements for predictor app
+        const currentPeriodEl = document.getElementById('currentPeriod');
+        const currentResultEl = document.getElementById('currentResult');
+        const confidenceFillEl = document.getElementById('confidenceFill');
+        const confidenceTextEl = document.getElementById('confidenceText');
+        const mostFrequentBigSmallEl = document.getElementById('mostFrequentBigSmall');
+        const leastFrequentBigSmallEl = document.getElementById('leastFrequentBigSmall');
+        const winRateEl = document.getElementById('winRate');
+        const totalWinBetsEl = document.getElementById('totalWinBets');
+        const totalLossBetsEl = document.getElementById('totalLossBets');
+        const serverStatusEl = document.getElementById('serverStatus');
+        const serverStatusIndicator = document.getElementById('serverStatusIndicator');
+        const historyContainer = document.getElementById('history');
+        const statsTotalWinsEl = document.getElementById('statsTotalWins');
+        const statsTotalLossesEl = document.getElementById('statsTotalLosses');
+        const statsWinRateEl = document.getElementById('statsWinRate');
+        const currentStreakEl = document.getElementById('currentStreak');
+        const lastFiveActualsEl = document.getElementById('lastFiveActuals');
+        const videoPopupEl = document.getElementById('videoPopup');
+        const youtubeVideoEl = document.getElementById('youtubeVideo');
+        const confirmModalEl = document.getElementById('confirmModal');
+        const modalMessageEl = document.getElementById('modalMessage');
+        const streakBreakPopupEl = document.getElementById('streakBreakPopup');
+        const streakBreakMessageEl = document.getElementById('streakBreakMessage');
+        const badTrendIndicatorEl = document.getElementById('badTrendIndicator');
+        const badTrendMessageTextEl = document.getElementById('badTrendMessage');
+        const badTrendPopupEl = document.getElementById('badTrendPopup');
+        const badTrendPopupMessageEl = document.getElementById('badTrendPopupMessage');
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-lang-key]').forEach(element => {
+                const key = element.getAttribute('data-lang-key');
+                const translation = translations[currentLanguage][key] || translations['en'][key];
+                if (translation) {
+                    if (translation.includes('<') && translation.includes('>')) { // Check if translation contains HTML
+                        element.innerHTML = translation;
+                    } else {
+                        element.textContent = translation;
+                    }
+                }
+            });
+            document.querySelectorAll('.history-item .watermark').forEach(wm => {
+                wm.textContent = "ALPHA X AI"; // Watermark text is static
+            });
+            const isConnected = serverStatusIndicator.classList.contains('bg-win-color');
+            updateServerStatusUI(isConnected); // Update server status text based on current language
+        }
+
+        const navItems = document.querySelectorAll('.navigation ul li');
+        const sections = document.querySelectorAll('#appContainer .content-section'); // Scope sections to appContainer
+        const navIndicator = document.querySelector('.navigation .indicator');
+
+        navItems.forEach((item, index) => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                const itemWidth = item.offsetWidth;
+                if(navIndicator) navIndicator.style.transform = `translateX(calc(${itemWidth}px * ${index}))`;
+
+                const sectionId = item.querySelector('a').getAttribute('data-section');
+                sections.forEach(section => section.classList.remove('active'));
+                const targetSection = document.getElementById(sectionId);
+                if (targetSection) targetSection.classList.add('active');
+            });
+        });
+
+        function openVideoPopup() {
+            youtubeVideoEl.src = "https://www.youtube.com/embed/dQw4w9WgXcQ"; // Example video, replace with actual
+            videoPopupEl.classList.add('active');
+            playSound('open');
+        }
+
+        function closeVideoPopup() {
+            youtubeVideoEl.src = ""; // Stop video
+            videoPopupEl.classList.remove('active');
+            playSound('close');
+        }
+
+        let currentConfirmCallback = null;
+        function showConfirmModal(messageKey, onConfirm) {
+            const message = translations[currentLanguage][messageKey] || translations['en'][messageKey] || "Are you sure?";
+            modalMessageEl.textContent = message;
+            confirmModalEl.classList.add('active');
+            currentConfirmCallback = onConfirm;
+            playSound('open');
+        }
+
+        document.getElementById('confirmModalBtn').addEventListener('click', () => {
+            if (currentConfirmCallback) currentConfirmCallback();
+            confirmModalEl.classList.remove('active');
+            playSound('confirm');
+            currentConfirmCallback = null;
+        });
+
+        document.getElementById('cancelModalBtn').addEventListener('click', () => {
+            confirmModalEl.classList.remove('active');
+            playSound('close');
+            currentConfirmCallback = null;
+        });
+        // Event listeners for streak and bad trend popups
+        document.getElementById('cancelStreakModalBtn').addEventListener('click', () => {
+            streakBreakPopupEl.classList.remove('active');
+            playSound('close');
+        });
+        document.getElementById('cancelBadTrendModalBtn').addEventListener('click', () => {
+            badTrendPopupEl.classList.remove('active');
+            playSound('close');
+        });
+
+
+        document.getElementById('languageToggle').addEventListener('change', (e) => {
+            currentLanguage = e.target.checked ? 'hi' : 'en';
+            localStorage.setItem('alphaXAiLanguage', currentLanguage);
+            updateLanguage();
+            playSound('toggle');
+        });
+
+        document.getElementById('notificationToggle').addEventListener('change', (e) => {
+            isNotificationsEnabled = e.target.checked;
+            localStorage.setItem('alphaXAiNotifications', isNotificationsEnabled);
+            if(isNotificationsEnabled && Notification.permission !== "granted") Notification.requestPermission();
+            playSound('toggle');
+        });
+
+        document.getElementById('soundToggle').addEventListener('change', (e) => {
+            isSoundEnabled = e.target.checked;
+            localStorage.setItem('alphaXAiSound', isSoundEnabled);
+            if (isSoundEnabled) playSound('toggle'); // Play sound only if enabling
+        });
+
+        document.getElementById('predictionModeToggle').addEventListener('change', (e) => {
+            isAdvancedModeActive = e.target.checked; // True for "bolt" (advanced), false for "moon" (normal)
+            localStorage.setItem('alphaXAiPredictionMode', isAdvancedModeActive ? 'advanced' : 'normal');
+            playSound('toggle');
+        });
+
+        function resetSettings() {
+            showConfirmModal('reset_settings_confirm', () => {
+                currentLanguage = 'en';
+                isSoundEnabled = true;
+                isNotificationsEnabled = false;
+                isAdvancedModeActive = true; // Default to advanced
+                localStorage.setItem('alphaXAiLanguage', currentLanguage);
+                localStorage.setItem('alphaXAiSound', isSoundEnabled);
+                localStorage.setItem('alphaXAiNotifications', isNotificationsEnabled);
+                localStorage.setItem('alphaXAiPredictionMode', 'advanced');
+                document.getElementById('languageToggle').checked = false;
+                document.getElementById('notificationToggle').checked = false;
+                document.getElementById('soundToggle').checked = true;
+                document.getElementById('predictionModeToggle').checked = true; // Advanced is checked
+                updateLanguage();
+            });
+        }
+
+        function playSound(type) {
+            if (!isSoundEnabled) return;
+            // console.log(`Sound: ${type}`); // Placeholder for actual sound implementation
+            // Example: new Audio(`/sounds/${type}.mp3`).play();
+        }
+
+        function getBigSmallFromActual(actualNumber) {
+            if (actualNumber === null || isNaN(actualNumber)) return null;
+            const num = parseInt(actualNumber);
+            if (num >= 0 && num <= 4) return "SMALL";
+            if (num >= 5 && num <= 9) return "BIG";
+            return null; // Should not happen with valid 0-9 input
+        }
+
+        function analyzeTrendStability(history) {
+            if (history.length < 10) return { isStable: true, reason: "Not enough data for trend stability check", details: "" };
+            const confirmedHistory = history.filter(p => p.status === "Win" || p.status === "Loss");
+            if (confirmedHistory.length < 10) return { isStable: true, reason: "Not enough confirmed data", details: "" };
+
+            const recentResults = confirmedHistory.slice(0, 10).map(p => getBigSmallFromActual(p.actual));
+            const bigCount = recentResults.filter(r => r === "BIG").length;
+            const smallCount = recentResults.filter(r => r === "SMALL").length;
+
+            if (bigCount >= 8 || smallCount >= 8) {
+                return { isStable: false, reason: "Extreme recent imbalance (>=80%)", details: `B:${bigCount}, S:${smallCount}` };
+            }
+            const recentPredictions = confirmedHistory.slice(0,10);
+            const recentCorrectPredictions = recentPredictions.filter(p => p.status === "Win").length;
+            if (recentPredictions.length === 10 && recentCorrectPredictions < 3) {
+                 return { isStable: false, reason: "Very low recent prediction accuracy (<30%)", details: `${recentCorrectPredictions}/10 correct` };
+            }
+            let currentActualStreak = 0;
+            let lastActual = null;
+            for (const entry of confirmedHistory.slice(0,10).map(p => getBigSmallFromActual(p.actual))) {
+                if (entry === lastActual) currentActualStreak++; else { lastActual = entry; currentActualStreak = 1;}
+                if (currentActualStreak >= 6) return { isStable: false, reason: "Long streak of same actual outcome (>=6)", details: `${lastActual} streak of ${currentActualStreak}`};
+            }
+            return { isStable: true, reason: "Trend appears stable enough for prediction", details: "" };
+        }
+
+        function analyzeFrequency(history, windowSize = 10, weight = 0.15) {
+            if (history.length < windowSize) return null;
+            const recent = history.slice(0, windowSize).map(p => getBigSmallFromActual(p.actual)).filter(bs => bs);
+            if (recent.length < windowSize / 2) return null; 
+
+            const bigCount = recent.filter(bs => bs === "BIG").length;
+            const smallCount = recent.filter(bs => bs === "SMALL").length;
+
+            if (bigCount > smallCount) return { prediction: "BIG", weight: weight * (bigCount / recent.length), source: `Freq-${windowSize}W` };
+            if (smallCount > bigCount) return { prediction: "SMALL", weight: weight * (smallCount / recent.length), source: `Freq-${windowSize}W` };
+            return null;
+        }
+
+        function analyzeTransitions(history, weight = 0.2) {
+            if (history.length < 5) return null;
+            const transitions = { "B": { "B": 0, "S": 0 }, "S": { "B": 0, "S": 0 } };
+            
+            for (let i = 0; i < history.length - 1; i++) {
+                const currentBS = getBigSmallFromActual(history[i]?.actual);
+                const prevBS = getBigSmallFromActual(history[i+1]?.actual); 
+                if (currentBS && prevBS) {
+                    if (!transitions[prevBS]) transitions[prevBS] = { "B": 0, "S": 0 }; 
+                     transitions[prevBS][currentBS]++;
+                }
+            }
+            
+            const lastOutcome = getBigSmallFromActual(history[0]?.actual);
+            if (!lastOutcome || !transitions[lastOutcome]) return null; 
+
+            const nextBigProb = transitions[lastOutcome]["B"] / (transitions[lastOutcome]["B"] + transitions[lastOutcome]["S"] || 1);
+            const nextSmallProb = transitions[lastOutcome]["S"] / (transitions[lastOutcome]["B"] + transitions[lastOutcome]["S"] || 1);
+
+            if (nextBigProb > nextSmallProb + 0.1) return { prediction: "BIG", weight: weight * nextBigProb, source: "Transition" };
+            if (nextSmallProb > nextBigProb + 0.1) return { prediction: "SMALL", weight: weight * nextSmallProb, source: "Transition" };
+            return null;
+        }
+        
+        function analyzeStreaks(history, weight = 0.18) {
+            if (history.length < 3) return null;
+            const actuals = history.map(p => getBigSmallFromActual(p.actual)).filter(bs => bs);
+            if (actuals.length < 3) return null;
+
+            let currentStreakType = actuals[0];
+            let currentStreakLength = 0;
+            for (const outcome of actuals) {
+                if (outcome === currentStreakType) currentStreakLength++;
+                else break;
+            }
+
+            let prediction;
+            let calculatedWeight = weight;
+
+            if (currentStreakLength >= 3) { 
+                prediction = currentStreakType === "BIG" ? "SMALL" : "BIG"; 
+                if (currentStreakLength >= 5) { 
+                    calculatedWeight *= 0.7; 
+                } else { 
+                    calculatedWeight *= (currentStreakLength / 4); 
+                }
+                return { prediction: prediction, weight: Math.min(calculatedWeight, weight), source: `StreakBreak-${currentStreakLength}` };
+            }
+            
+            if (actuals.length >=2 && actuals[0] !== actuals[1]) { 
+                 return { prediction: actuals[0], weight: weight * 0.6, source: "StreakContinuation-New" }; 
+            }
+            return null;
+        }
+
+        function analyzeAlternatingPatterns(history, weight = 0.12) {
+            if (history.length < 5) return null;
+            const actuals = history.slice(0, 5).map(p => getBigSmallFromActual(p.actual)).filter(bs => bs);
+            if (actuals.length < 4) return null; 
+
+            if (actuals[0] === "SMALL" && actuals[1] === "BIG" && actuals[2] === "SMALL" && actuals[3] === "BIG") {
+                return { prediction: "SMALL", weight: weight, source: "Alt-BSBS" };
+            }
+            if (actuals[0] === "BIG" && actuals[1] === "SMALL" && actuals[2] === "BIG" && actuals[3] === "SMALL") {
+                return { prediction: "BIG", weight: weight, source: "Alt-SBSB" };
+            }
+            return null;
+        }
+        
+        function analyzeWeightedHistorical(history, weightDecayFactor = 0.85, baseWeight = 0.15) { 
+            if (history.length < 5) return null;
+            let bigWeightedScore = 0;
+            let smallWeightedScore = 0;
+            let currentWeight = 1.0;
+            const maxHistory = Math.min(history.length, 15); 
+
+            for (let i = 0; i < maxHistory; i++) { 
+                const outcome = getBigSmallFromActual(history[i].actual);
+                if (outcome === "BIG") bigWeightedScore += currentWeight;
+                else if (outcome === "SMALL") smallWeightedScore += currentWeight;
+                currentWeight *= weightDecayFactor;
+            }
+
+            if (bigWeightedScore === 0 && smallWeightedScore === 0) return null;
+
+            if (bigWeightedScore > smallWeightedScore) return { prediction: "BIG", weight: baseWeight * (bigWeightedScore / (bigWeightedScore + smallWeightedScore)), source: "WeightedHist" };
+            if (smallWeightedScore > bigWeightedScore) return { prediction: "SMALL", weight: baseWeight * (smallWeightedScore / (bigWeightedScore + smallWeightedScore)), source: "WeightedHist" };
+            return null;
+        }
+
+        /**
+         * Calculates the Relative Strength Index (RSI).
+         * @param {number[]} data - Array of numerical data points (e.g., actual numbers 0-9).
+         * @param {number} period - The lookback period for RSI calculation (e.g., 14).
+         * @returns {number|null} The RSI value, or null if not enough data.
+         */
+        function calculateRSI(data, period) {
+            if (!data || data.length < period + 1) {
+                return null; // Not enough data
+            }
+
+            let gains = [];
+            let losses = [];
+
+            for (let i = 1; i < data.length; i++) {
+                const change = data[i] - data[i - 1];
+                if (change > 0) {
+                    gains.push(change);
+                    losses.push(0);
+                } else {
+                    gains.push(0);
+                    losses.push(Math.abs(change));
+                }
+            }
+
+            if (gains.length < period) {
+                return null; // Still not enough data after calculating changes
+            }
+            
+            // Calculate initial average gain and loss
+            let avgGain = gains.slice(0, period).reduce((sum, val) => sum + val, 0) / period;
+            let avgLoss = losses.slice(0, period).reduce((sum, val) => sum + val, 0) / period;
+
+            // Smooth subsequent averages
+            for (let i = period; i < gains.length; i++) {
+                avgGain = (avgGain * (period - 1) + gains[i]) / period;
+                avgLoss = (avgLoss * (period - 1) + losses[i]) / period;
+            }
+
+            if (avgLoss === 0) {
+                return 100; // RSI is 100 if average loss is 0 (all gains or no losses)
+            }
+
+            const rs = avgGain / avgLoss;
+            const rsi = 100 - (100 / (1 + rs));
+            
+            return rsi;
+        }
+
+        /**
+         * Analyzes RSI to generate a prediction signal.
+         * @param {Array<Object>} history - Array of past game results.
+         * @param {number} rsiPeriod - The period for RSI calculation.
+         * @param {number} weight - The base weight for the RSI signal.
+         * @returns {Object|null} A prediction signal object or null.
+         */
+        function analyzeRSI(history, rsiPeriod = 14, weight = 0.15) {
+            const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null).reverse(); // RSI needs oldest first
+
+            if (actualNumbers.length < rsiPeriod + 1) {
+                return null;
+            }
+
+            const rsiValue = calculateRSI(actualNumbers, rsiPeriod);
+
+            if (rsiValue === null) {
+                return null;
+            }
+
+            // RSI-based prediction logic:
+            // RSI < 30 (oversold) -> predict BIG (anticipating upward movement in numbers)
+            // RSI > 70 (overbought) -> predict SMALL (anticipating downward movement in numbers)
+            // Assign a stronger weight if RSI is further into overbought/oversold territory.
+            let prediction = null;
+            let signalWeight = 0;
+
+            if (rsiValue < 30) {
+                prediction = "BIG";
+                signalWeight = weight * ( (30 - rsiValue) / 30 + 1); // Weight increases as RSI goes lower than 30
+            } else if (rsiValue > 70) {
+                prediction = "SMALL";
+                signalWeight = weight * ( (rsiValue - 70) / 30 + 1); // Weight increases as RSI goes higher than 70
+            }
+            
+            signalWeight = Math.min(signalWeight, weight * 1.5); // Cap the boosted weight
+
+            if (prediction) {
+                return { prediction: prediction, weight: signalWeight, source: "RSI" };
+            }
+            return null;
+        }
+
+
+        function updateSignalPerformance(predictedBySignal, actualOutcome, signalSourceBase) {
+            if (!signalPerformance[signalSourceBase]) {
+                signalPerformance[signalSourceBase] = { correct: 0, total: 0, history: [] };
+            }
+            signalPerformance[signalSourceBase].total++;
+            if (predictedBySignal === actualOutcome) {
+                signalPerformance[signalSourceBase].correct++;
+                signalPerformance[signalSourceBase].history.push(1); // 1 for correct
+            } else {
+                signalPerformance[signalSourceBase].history.push(0); // 0 for incorrect
+            }
+            if (signalPerformance[signalSourceBase].history.length > 10) { // Keep last 10 performance records
+                signalPerformance[signalSourceBase].history.shift();
+            }
+        }
+
+        function getDynamicWeightAdjustment(signalSourceBase) {
+            const performance = signalPerformance[signalSourceBase];
+            if (!performance || performance.history.length < 3) return 1.0; // Default if not enough data
+
+            const recentAccuracy = performance.history.slice(-5).reduce((a,b) => a+b, 0) / Math.min(performance.history.length, 5);
+
+            if (recentAccuracy > 0.7) return 1.15; // Boost if highly accurate
+            if (recentAccuracy < 0.3) return 0.85; // Penalize if inaccurate
+            return 1.0;
+        }
+
+
+        function generateBigSmallPrediction(history) {
+            const stability = analyzeTrendStability(history);
+            if (!stability.isStable) {
+                return {
+                    prediction: "SKIP",
+                    confidence: 0,
+                    skipReason: stability.reason,
+                    skipDetails: stability.details
+                };
+            }
+
+            const confirmedHistory = history.filter(p => p.actual !== null && (p.status === "Win" || p.status === "Loss"));
+            if (confirmedHistory.length < 5) { // Keep minimum history for basic signals
+                // For RSI, we need more data, it will return null if not enough.
+                return { prediction: Math.random() > 0.5 ? "BIG" : "SMALL", confidence: 45, source: "InsufficientDataDefault" };
+            }
+
+            let signals = [];
+            signals.push(analyzeFrequency(confirmedHistory, 5, 0.1 * getDynamicWeightAdjustment('Freq')));
+            signals.push(analyzeFrequency(confirmedHistory, 10, 0.15 * getDynamicWeightAdjustment('Freq')));
+            signals.push(analyzeFrequency(confirmedHistory, 20, 0.1 * getDynamicWeightAdjustment('Freq')));
+            signals.push(analyzeTransitions(confirmedHistory, 0.2 * getDynamicWeightAdjustment('Transition')));
+            signals.push(analyzeStreaks(confirmedHistory, 0.18 * getDynamicWeightAdjustment('StreakBreak')));
+            signals.push(analyzeAlternatingPatterns(confirmedHistory, 0.12 * getDynamicWeightAdjustment('Alt')));
+            signals.push(analyzeWeightedHistorical(confirmedHistory, 0.85, 0.15 * getDynamicWeightAdjustment('WeightedHist')));
+            signals.push(analyzeRSI(confirmedHistory, 14, 0.15 * getDynamicWeightAdjustment('RSI'))); // Added RSI signal
+
+            signals = signals.filter(s => s !== null && s.prediction !== "SKIP" && s.weight > 0.01);
+
+            if (signals.length === 0) {
+                return { prediction: Math.random() > 0.5 ? "BIG" : "SMALL", confidence: 40, source: "NoClearSignals" };
+            }
+
+            let bigScore = 0;
+            let smallScore = 0;
+            let totalWeight = 0;
+            let contributingSources = new Set();
+
+            signals.forEach(signal => {
+                if (signal.prediction === "BIG") bigScore += signal.weight;
+                else if (signal.prediction === "SMALL") smallScore += signal.weight;
+                totalWeight += signal.weight;
+                contributingSources.add(signal.source.split('-')[0]); 
+            });
+
+            let finalPrediction;
+            if (bigScore > smallScore) finalPrediction = "BIG";
+            else if (smallScore > bigScore) finalPrediction = "SMALL";
+            else finalPrediction = Math.random() > 0.5 ? "BIG" : "SMALL"; 
+
+            let confidence = 45; 
+            if (totalWeight > 0) {
+                const predominance = Math.abs(bigScore - smallScore) / totalWeight; 
+                confidence += predominance * 35; 
+                confidence += Math.min(contributingSources.size * 4, 20); 
+            }
+
+            confidence += Math.min(signals.length * 2, 10); 
+
+            if (stability.reason !== "Trend appears stable enough for prediction" && stability.isStable) {
+                confidence *= 0.85; 
+            }
+
+            if (!isAdvancedModeActive && confidence > 70) { 
+                confidence = 70 + (confidence - 70) * 0.5;
+            }
+            confidence = Math.min(Math.max(Math.floor(confidence), 35), 97); 
+
+            return {
+                prediction: finalPrediction,
+                confidence: confidence,
+            };
+        }
+
+
+        async function fetchGameResultsFromAPI() {
+            try {
+                const requestPayload = {
+                    pageSize: 10, 
+                    pageNo: 1,
+                    typeId: 1,
+                    language: 0,
+                    random: "4a0522c6ecd8410496260e686be2a57c", 
+                    signature: "334B5E70A0C9B8918B0B15E517E2069C", 
+                    timestamp: Math.floor(Date.now() / 1000) 
+                };
+
+                const response = await fetch("https://api.bdg88zf.com/api/webapi/GetNoaverageEmerdList", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestPayload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error("API request failed:", response.status, response.statusText, errorData);
+                    let userMessage = `${translations[currentLanguage].api_error || 'API Error'} (Status: ${response.status})`;
+                    if (errorData.toLowerCase().includes("wrong signature") || (response.status === 500 && errorData.toLowerCase().includes("wrong signature"))) {
+                         userMessage = `API Error: Wrong Signature. (Code: ${response.status})`;
+                         console.error("API Signature Error: The static 'random' and 'signature' values might be incorrect or expired.");
+                    } else if (response.status === 401 || response.status === 403) {
+                         userMessage = `API Auth Error (Code: ${response.status}). Check credentials.`;
+                         console.error("API Authentication Error.");
+                    }
+                    updateServerStatusUI(false, userMessage);
+                    return [];
+                }
+                const data = await response.json();
+                if (data && data.code === 5) {
+                    console.error("API returned 'Wrong signature' (Code: 5). The static 'random' and 'signature' values might be incorrect or expired.");
+                    updateServerStatusUI(false, `API Error: Wrong Signature (Code: ${data.code}).`);
+                    return [];
+                }
+                if (data && data.code !== 0 && data.msg) {
+                    console.error("API returned an error:", data.msg, "Code:", data.code);
+                    updateServerStatusUI(false, `${translations[currentLanguage].api_error || 'API Error'} - ${data.msg}`);
+                    return [];
+                }
+                if (data && data.data && data.data.list) {
+                    updateServerStatusUI(true);
+                    return data.data.list;
+                } else {
+                    console.error("Unexpected API response structure:", data);
+                    updateServerStatusUI(false, translations[currentLanguage].api_error || 'API Error');
+                    return [];
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+                updateServerStatusUI(false, translations[currentLanguage].api_error || 'API Error');
+                return [];
+            }
+        }
+
+        function updateStatsAndHistory(latestApiResultNumber, periodToUpdate) {
+            const entryToUpdate = appHistory.find(p => p.periodFull === periodToUpdate && p.status === "Pending");
+
+            if (entryToUpdate) {
+                const actualNumber = parseInt(latestApiResultNumber);
+                entryToUpdate.actual = actualNumber;
+                const actualBigOrSmall = getBigSmallFromActual(actualNumber);
+                const predictedBigOrSmall = entryToUpdate.prediction;
+
+                // Update performance for signals that contributed to this prediction
+                // This part assumes `entryToUpdate.contributingSignals` was stored if needed
+                // For simplicity, we'll focus on the overall win/loss for now.
+                // Advanced: if (entryToUpdate.contributingSignals && actualBigOrSmall) {
+                //    entryToUpdate.contributingSignals.forEach(sig => {
+                //        if (sig.prediction !== "SKIP") {
+                //            updateSignalPerformance(sig.prediction, actualBigOrSmall, sig.source.split('-')[0]);
+                //        }
+                //    });
+                // }
+
+
+                if (actualBigOrSmall && predictedBigOrSmall === actualBigOrSmall) {
+                    entryToUpdate.status = "Win";
+                    currentStreak = currentStreak >= 0 ? currentStreak + 1 : 1;
+                    playSound('win');
+                } else if (actualBigOrSmall && predictedBigOrSmall !== "SKIP") { 
+                    entryToUpdate.status = "Loss";
+                    currentStreak = currentStreak <= 0 ? currentStreak - 1 : -1;
+                    playSound('loss');
+                } else { 
+                    entryToUpdate.status = "Skipped"; 
+                    playSound('skipped');
+                }
+            }
+            localStorage.setItem('alphaXAiHistory', JSON.stringify(appHistory));
+        }
+
+        async function fetchPredictionData() {
+            if (checkIfPredictionsPaused()) {
+                currentResultEl.textContent = translations[currentLanguage].predictions_paused || "Predictions Paused";
+                return;
+            }
+            if (checkPredictionsDisabled()) {
+                currentResultEl.textContent = translations[currentLanguage].predictions_disabled || "Predictions Disabled";
+                confidenceFillEl.style.width = "0%";
+                confidenceTextEl.textContent = "0%";
+                return;
+            }
+
+            currentResultEl.textContent = translations[currentLanguage].fetching_data || "Fetching...";
+            const apiResults = await fetchGameResultsFromAPI();
+
+            if (!apiResults || apiResults.length === 0) {
+                const lastPending = appHistory.find(p => p.status === "Pending");
+                if (lastPending) {
+                    currentPeriodEl.textContent = lastPending.periodDisplay;
+                    currentResultEl.textContent = lastPending.prediction;
+                    confidenceFillEl.style.width = `${lastPending.confidence}%`;
+                    confidenceTextEl.textContent = `${lastPending.confidence}%`;
+                } else if (!currentPeriodEl.textContent || currentPeriodEl.textContent === "-") {
+                     currentPeriodEl.textContent = "-";
+                     if (serverStatusEl.textContent.toLowerCase().includes("error")) {
+                        currentResultEl.textContent = serverStatusEl.textContent; 
+                     } else {
+                        currentResultEl.textContent = translations[currentLanguage].api_error || "API Error";
+                     }
+                     confidenceTextEl.textContent = "0%";
+                     confidenceFillEl.style.width = "0%";
+                }
+                return;
+            }
+
+            const latestApiEntry = apiResults[0];
+            const latestApiPeriodFull = latestApiEntry.issueNumber;
+            const latestApiResultNumber = latestApiEntry.number;
+
+            updateStatsAndHistory(latestApiResultNumber, latestApiPeriodFull);
+
+            const nextPeriodToPredictFull = (BigInt(latestApiPeriodFull) + 1n).toString();
+            const nextPeriodToPredictDisplay = nextPeriodToPredictFull.slice(-5);
+
+            const existingPendingForNext = appHistory.find(p => p.periodFull === nextPeriodToPredictFull && p.status === "Pending");
+
+            if (!existingPendingForNext || existingPendingForNext.periodFull !== lastFetchedPeriod) { 
+                const predictionResult = generateBigSmallPrediction(appHistory);
+
+                if (predictionResult.prediction === "SKIP") {
+                    currentPeriodEl.textContent = nextPeriodToPredictDisplay;
+                    currentResultEl.textContent = translations[currentLanguage].predictions_disabled || "Predictions Disabled";
+                    confidenceFillEl.style.width = "0%";
+                    confidenceTextEl.textContent = "0%";
+
+                    const newPredictionEntry = {
+                        periodFull: nextPeriodToPredictFull, periodDisplay: nextPeriodToPredictDisplay,
+                        prediction: "SKIP", confidence: 0, status: "Skipped", actual: null,
+                        timestamp: Date.now(), skipReason: predictionResult.skipReason, skipDetails: predictionResult.skipDetails
+                    };
+                    appHistory.unshift(newPredictionEntry);
+                    appHistory = appHistory.slice(0, 100); 
+                    localStorage.setItem('alphaXAiHistory', JSON.stringify(appHistory));
+
+                    showBadTrendIndicatorUI(predictionResult.skipReason, predictionResult.skipDetails);
+                    showBadTrendPopupUI(
+                        translations[currentLanguage].bad_trend_message || "Unstable trend detected",
+                        predictionResult.skipDetails
+                    );
+                    lastFetchedPeriod = nextPeriodToPredictFull;
+                } else {
+                    hideBadTrendIndicatorUI(); 
+                    currentPeriodEl.textContent = nextPeriodToPredictDisplay;
+                    currentResultEl.textContent = predictionResult.prediction;
+                    confidenceFillEl.style.width = `${predictionResult.confidence}%`;
+                    confidenceTextEl.textContent = `${predictionResult.confidence}%`;
+
+                    const newPredictionEntry = {
+                        periodFull: nextPeriodToPredictFull, periodDisplay: nextPeriodToPredictDisplay,
+                        prediction: predictionResult.prediction, confidence: predictionResult.confidence,
+                        status: "Pending", actual: null, timestamp: Date.now()
+                    };
+                    appHistory.unshift(newPredictionEntry);
+                    appHistory = appHistory.slice(0, 100);
+                    localStorage.setItem('alphaXAiHistory', JSON.stringify(appHistory));
+                    lastFetchedPeriod = nextPeriodToPredictFull;
+
+                    if (isNotificationsEnabled && Notification.permission === 'granted') {
+                        new Notification(`ALPHA X AI: ${predictionResult.prediction}`, {
+                            body: `Period: ${nextPeriodToPredictDisplay} | Confidence: ${predictionResult.confidence}%`,
+                            icon: 'https://placehold.co/48x48/38B2AC/1A202C?text=AXA' 
+                        });
+                        playSound('notify');
+                    }
+                }
+            } else if (existingPendingForNext) { 
+                currentPeriodEl.textContent = existingPendingForNext.periodDisplay;
+                currentResultEl.textContent = existingPendingForNext.prediction;
+                confidenceFillEl.style.width = `${existingPendingForNext.confidence}%`;
+                confidenceTextEl.textContent = `${existingPendingForNext.confidence}%`;
+                 if(existingPendingForNext.prediction === "SKIP") {
+                    showBadTrendIndicatorUI(existingPendingForNext.skipReason, existingPendingForNext.skipDetails);
+                } else {
+                    hideBadTrendIndicatorUI();
+                }
+            }
+
+            updateDashboardAndStats();
+            updateHistoryUI();
+            checkWinStreakAndNotify();
+        }
+
+        function updateDashboardAndStats() {
+            const confirmedHistory = appHistory.filter(p => p.status === "Win" || p.status === "Loss");
+            const wins = confirmedHistory.filter(p => p.status === "Win").length;
+            const losses = confirmedHistory.filter(p => p.status === "Loss").length;
+            const winRate = (wins + losses) > 0 ? Math.round((wins / (wins + losses)) * 100) : 0;
+
+            winRateEl.textContent = `${winRate}%`;
+            totalWinBetsEl.textContent = wins;
+            totalLossBetsEl.textContent = losses;
+            statsTotalWinsEl.textContent = wins;
+            statsTotalLossesEl.textContent = losses;
+            statsWinRateEl.textContent = `${winRate}%`;
+
+            if (currentStreak > 0) {
+                currentStreakEl.textContent = `W${currentStreak}`;
+                currentStreakEl.className = 'text-xl font-bold text-win-color';
+            } else if (currentStreak < 0) {
+                currentStreakEl.textContent = `L${Math.abs(currentStreak)}`;
+                currentStreakEl.className = 'text-xl font-bold text-loss-color';
+            } else {
+                currentStreakEl.textContent = '-';
+                currentStreakEl.className = 'text-xl font-bold text-text-light-primary';
+            }
+
+            const lastFiveActuals = appHistory.filter(p => p.actual !== null).slice(0, 5).map(p => p.actual).join(', ') || '-';
+            lastFiveActualsEl.textContent = lastFiveActuals;
+
+            const bigSmallCounts = { BIG: 0, SMALL: 0 };
+            confirmedHistory.forEach(entry => {
+                if(entry.actual !== null){
+                    const bs = getBigSmallFromActual(parseInt(entry.actual));
+                    if (bs === "BIG") bigSmallCounts.BIG++;
+                    else if (bs === "SMALL") bigSmallCounts.SMALL++;
+                }
+            });
+
+            if (bigSmallCounts.BIG === 0 && bigSmallCounts.SMALL === 0) {
+                mostFrequentBigSmallEl.textContent = '-';
+                leastFrequentBigSmallEl.textContent = '-';
+            } else if (bigSmallCounts.BIG >= bigSmallCounts.SMALL) {
+                mostFrequentBigSmallEl.textContent = 'BIG';
+                leastFrequentBigSmallEl.textContent = bigSmallCounts.SMALL > 0 || bigSmallCounts.BIG === 0 ? 'SMALL' : (bigSmallCounts.BIG > 0 ? 'BIG' : '-');
+            } else {
+                mostFrequentBigSmallEl.textContent = 'SMALL';
+                leastFrequentBigSmallEl.textContent = bigSmallCounts.BIG > 0 || bigSmallCounts.SMALL === 0 ? 'BIG' : (bigSmallCounts.SMALL > 0 ? 'SMALL' : '-');
+            }
+        }
+
+        function updateHistoryUI() {
+            historyContainer.innerHTML = '';
+            if (appHistory.length === 0) {
+                historyContainer.innerHTML = `<p class="text-center text-text-light-secondary p-4" data-lang-key="no_history">${translations[currentLanguage].no_history || "No history yet."}</p>`;
+                return;
+            }
+
+            appHistory.forEach((entry, index) => {
+                const status = (entry.status || 'pending').toLowerCase();
+                const iconClass = {
+                    win: 'fas fa-check-circle', loss: 'fas fa-times-circle',
+                    pending: 'fas fa-hourglass-half', skipped: 'fas fa-ban'
+                }[status] || 'fas fa-question-circle';
+                const badgeClass = {
+                    win: 'win-icon', loss: 'loss-icon',
+                    pending: 'pending-icon', skipped: 'skipped-icon'
+                }[status] || '';
+
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item ${status} flex items-center justify-between p-4 rounded-xl animate__animated animate__fadeInUp animate__faster`;
+                historyItem.style.animationDelay = `${index * 0.05}s`;
+
+                let skipDetailsHTML = '';
+                if (status === 'skipped' && entry.skipReason) {
+                    skipDetailsHTML = `<div class="text-xs mt-1 italic text-text-light-secondary">${entry.skipReason}${entry.skipDetails ? `: ${entry.skipDetails}` : ''}</div>`;
+                }
+
+                historyItem.innerHTML = `
+                    <div class="watermark">ALPHA X AI</div> <div class="flex items-center space-x-3 flex-grow">
+                        <div class="status-icon ${badgeClass}"> <i class="${iconClass}"></i></div>
+                        <div class="flex-grow">
+                            <p class="text-lg font-semibold text-text-light-primary">${entry.periodDisplay || (entry.periodFull ? entry.periodFull.slice(-5) : 'N/A')}</p>
+                            <div class="flex flex-wrap text-sm gap-x-3 text-text-light-secondary">
+                                ${entry.prediction ? `<span>${translations[currentLanguage].prediction || 'Prediction'}: <strong class="text-text-light-primary">${entry.prediction || '-'}</strong></span>` : ''}
+                                ${entry.actual !== null ? `<span>Actual: <strong class="text-text-light-primary">${entry.actual} (${getBigSmallFromActual(entry.actual) || 'N/A'})</strong></span>` : ''}
+                                ${entry.confidence ? `<span>${translations[currentLanguage].confidence || 'Confidence'}: <strong class="text-text-light-primary">${entry.confidence}%</strong></span>` : ''}
+                            </div>
+                            <p class="text-sm capitalize font-medium mt-1 text-text-light-primary">${translations[currentLanguage][status] || status}</p>
+                            ${skipDetailsHTML}
+                        </div>
+                    </div>
+                    <button class="delete-btn text-text-light-secondary hover:text-accent-primary transition ml-2 p-2 rounded-full" data-index="${index}"> <i class="fas fa-trash-alt text-lg"></i></button>
+                `;
+                historyContainer.appendChild(historyItem);
+
+                historyItem.querySelector('.delete-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showConfirmModal('delete_item_confirm', () => {
+                        appHistory.splice(index, 1);
+                        localStorage.setItem('alphaXAiHistory', JSON.stringify(appHistory));
+                        updateHistoryUI();
+                        updateDashboardAndStats();
+                        playSound('confirm');
+                    });
+                });
+            });
+        }
+
+        document.getElementById('deleteAllHistoryBtn').addEventListener('click', () => {
+            showConfirmModal('delete_all_confirm', () => {
+                appHistory = [];
+                localStorage.removeItem('alphaXAiHistory');
+                lastFetchedPeriod = null;
+                currentStreak = 0;
+                updateHistoryUI();
+                updateDashboardAndStats();
+                playSound('confirm');
+            });
+        });
+
+        function updateServerStatusUI(isConnected, message = null) {
+            const lang = currentLanguage;
+            if (isConnected) {
+                serverStatusEl.textContent = message || translations[lang].connected || translations['en'].connected;
+                serverStatusIndicator.className = 'w-3 h-3 bg-win-color rounded-full animate-ping';
+            } else {
+                serverStatusEl.textContent = message || translations[lang].disconnected || translations['en'].disconnected;
+                serverStatusIndicator.className = 'w-3 h-3 bg-loss-color rounded-full'; // No ping on disconnect
+            }
+        }
+
+        function showBadTrendIndicatorUI(message, details) {
+            badTrendMessageTextEl.textContent = message;
+            badTrendIndicatorEl.style.display = 'flex';
+            if (isNotificationsEnabled && Notification.permission === 'granted') {
+                new Notification(translations[currentLanguage].trend_alert || "Trend Alert", {
+                    body: `${message}\n${details}`, icon: 'https://placehold.co/48x48/38B2AC/1A202C?text=AXA'
+                });
+            }
+            playSound('alert');
+        }
+        function hideBadTrendIndicatorUI() { badTrendIndicatorEl.style.display = 'none'; }
+        function showBadTrendPopupUI(message, details) {
+            badTrendPopupMessageEl.textContent = `${message}\n${details}`;
+            badTrendPopupEl.classList.add('active');
+            playSound('alert');
+        }
+        function disablePredictionsFor1Hour() {
+            const oneHourLater = Date.now() + (60 * 60 * 1000);
+            localStorage.setItem('alphaXAiPredictionsDisabled', 'true');
+            localStorage.setItem('alphaXAiPredictionsDisabledUntil', oneHourLater.toString());
+            isPredictionsDisabled = true; predictionsDisabledUntil = oneHourLater;
+            badTrendPopupEl.classList.remove('active');
+            showBadTrendIndicatorUI(
+                translations[currentLanguage].predictions_disabled || "Predictions Disabled",
+                translations[currentLanguage].trend_will_auto_resume || "Will auto-resume"
+            );
+            currentResultEl.textContent = translations[currentLanguage].predictions_disabled || "Predictions Disabled";
+            confidenceFillEl.style.width = "0%"; confidenceTextEl.textContent = "0%";
+            playSound('confirm');
+        }
+        function enablePredictions() {
+            localStorage.removeItem('alphaXAiPredictionsDisabled'); localStorage.removeItem('alphaXAiPredictionsDisabledUntil');
+            isPredictionsDisabled = false; predictionsDisabledUntil = 0;
+            hideBadTrendIndicatorUI();
+            playSound('confirm');
+        }
+        function checkPredictionsDisabled() {
+            if (predictionsDisabledUntil > 0 && Date.now() >= predictionsDisabledUntil) {
+                enablePredictions(); return false;
+            }
+            return isPredictionsDisabled;
+        }
+        function checkWinStreakAndNotify() {
+            let currentWinStreak = 0;
+            for (const entry of appHistory) { // Iterate from newest
+                if (entry.status === "Win") currentWinStreak++;
+                else if (entry.status === "Loss" || entry.status === "Skipped") break; // Streak broken
+            }
+            // Notify if streak is 7, and then again at 10, 13, etc. (every 3 wins after 7)
+            if (currentWinStreak >= 7 && (currentWinStreak === 7 || (currentWinStreak > 7 && (currentWinStreak - 7) % 3 === 0) ) ) {
+                 const msg = `${translations[currentLanguage].streak_alert || 'Win Streak'}: ${currentWinStreak} ${translations[currentLanguage].win.toLowerCase()}s! ${translations[currentLanguage].pause_predictions || 'Consider pausing?'}`;
+                if (isNotificationsEnabled && Notification.permission === 'granted') {
+                    new Notification(translations[currentLanguage].streak_alert || 'Win Streak Alert', { body: msg, icon: 'https://placehold.co/48x48/38B2AC/1A202C?text=AXA' });
+                }
+                streakBreakMessageEl.textContent = msg;
+                streakBreakPopupEl.classList.add('active');
+                playSound('alert');
+            }
+        }
+        function pausePredictionsFor30Minutes() {
+            localStorage.setItem('alphaXAiPredictionPausedUntil', (Date.now() + 30 * 60 * 1000).toString());
+            streakBreakPopupEl.classList.remove('active');
+            updatePausedStateUI(true);
+            playSound('confirm');
+        }
+        function updatePausedStateUI(isPaused) {
+            let pauseIndicator = document.getElementById('pauseIndicator');
+            if (isPaused && !pauseIndicator) {
+                const indicator = document.createElement('div');
+                indicator.id = 'pauseIndicator';
+                indicator.className = 'fixed top-4 right-4 bg-pending-color text-text-light-primary px-3 py-2 rounded-lg shadow-md z-50 flex items-center';
+                indicator.innerHTML = `<i class="fas fa-pause-circle mr-2"></i> ${translations[currentLanguage].predictions_paused || 'Predictions Paused'}`;
+                document.body.appendChild(indicator);
+            } else if (!isPaused && pauseIndicator) {
+                pauseIndicator.remove();
+            }
+        }
+        function checkIfPredictionsPaused() {
+            const pausedUntil = localStorage.getItem('alphaXAiPredictionPausedUntil');
+            if (pausedUntil && Date.now() < parseInt(pausedUntil)) {
+                updatePausedStateUI(true); return true;
+            } else if (pausedUntil) { // Paused time has expired
+                localStorage.removeItem('alphaXAiPredictionPausedUntil'); updatePausedStateUI(false);
+            }
+            return false;
+        }
+
+
+        function initializeAppPredictor() {
+            console.log("Initializing Predictor App...");
+            document.getElementById('languageToggle').checked = currentLanguage === 'hi';
+            document.getElementById('notificationToggle').checked = isNotificationsEnabled;
+            document.getElementById('soundToggle').checked = isSoundEnabled;
+            document.getElementById('predictionModeToggle').checked = isAdvancedModeActive;
+
+            updateLanguage();
+            updateDashboardAndStats();
+            updateHistoryUI();
+
+            if (checkPredictionsDisabled()) {
+                showBadTrendIndicatorUI(
+                    translations[currentLanguage].predictions_disabled || "Predictions Disabled",
+                    translations[currentLanguage].trend_will_auto_resume || "Will auto-resume"
+                );
+            }
+
+            fetchPredictionData();
+            setInterval(fetchPredictionData, 10000); // Fetch data every 10 seconds
+
+            if (isNotificationsEnabled && Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            showLoginPage(); // Start with login page
+            loginDeviceIdDisplay.textContent = getDeviceId();
+            loginDeviceIdDisplay.addEventListener('click', copyLoginDeviceId);
+            loginButton.addEventListener('click', handleLogin);
+
+            // Initial maintenance check
+            db.ref("maintenanceStatus/status").get().then(statusSnapshot => {
+                const isActive = statusSnapshot.val() === true;
+                if (isActive) {
+                    const storedKey = localStorage.getItem('alphaXAiAccessKey');
+                    const isHardcodedAdmin = storedKey && HARDCODED_ADMIN_KEYS.includes(storedKey);
+
+                    let isDBAdminForInitialCheck = false;
+                    if (storedKey && !isHardcodedAdmin) {
+                        db.ref("accessKeysAdmin/" + storedKey).get().then(adminSnap => {
+                            if(adminSnap.exists() && adminSnap.val().isAdmin === true && (!adminSnap.val().expiry || Date.now() <= adminSnap.val().expiry)) {
+                                isDBAdminForInitialCheck = true;
+                            }
+                            if (!isDBAdminForInitialCheck && !appContainer.classList.contains('active')) { // Only show maintenance if not already in app
+                                db.ref("maintenanceStatus/message").get().then(messageSnapshot => {
+                                    const message = messageSnapshot.val() || "The platform is currently undergoing scheduled maintenance. Please try again later.";
+                                    showMaintenancePage(message);
+                                });
+                            }
+                        }).catch(err => {
+                            console.error("Error checking stored admin key on load:", err);
+                             if (!appContainer.classList.contains('active')) {
+                                 db.ref("maintenanceStatus/message").get().then(messageSnapshot => {
+                                    const message = messageSnapshot.val() || "The platform is currently under maintenance. Please try again later.";
+                                    showMaintenancePage(message);
+                                });
+                            }
+                        });
+                    } else if (!isHardcodedAdmin && !appContainer.classList.contains('active')) {
+                         db.ref("maintenanceStatus/message").get().then(messageSnapshot => {
+                            const message = messageSnapshot.val() || "The platform is currently under maintenance. Please try again later.";
+                            showMaintenancePage(message);
+                        });
+                    } else if (isHardcodedAdmin) {
+                         console.log("Hardcoded admin key detected, bypassing initial maintenance screen for login attempt.");
+                    }
+                }
+            }).catch(error => {
+                console.error("Error checking maintenance status on load:", error);
+            });
+        });
+
+    </script>
+</body>
+</html>
