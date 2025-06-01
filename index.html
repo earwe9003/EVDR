@@ -720,12 +720,20 @@
                                     <li data-lang-key="how_it_works_li3_adv"><strong>Advanced Pattern Matching:</strong> Identifies recurring sequences (e.g., BSBS, BBSS) and alternating trends.</li>
                                     <li data-lang-key="how_it_works_li4_adv"><strong>Streak Dynamics:</strong> Analyzes current and historical win/loss streaks for both outcomes, assessing continuation or reversal likelihood.</li>
                                     <li data-lang-key="how_it_works_li5_adv"><strong>Consecutive Event Profiling:</strong> Monitors frequency of consecutive BIGs or SMALLs (e.g., BBB, SSSS).</li>
-                                    <li data-lang-key="how_it_works_li6_adv"><strong>Gap Distribution Analysis:</strong> Studies the typical number of periods between specific outcomes.</li>
+                                    <li data-lang-key="how_it_works_li6_adv"><strong>Gap Distribution Analysis:</strong> Studies the typical number of periods between specific outcomes or differences between consecutive numbers.</li>
                                     <li data-lang-key="how_it_works_li7_adv"><strong>Volatility Indexing:</strong> Measures recent market stability; high volatility can lead to cautious "SKIP" predictions or lower confidence.</li>
                                     <li data-lang-key="how_it_works_li11_adv"><strong>Relative Strength Index (RSI) Analysis:</strong> Measures the speed and change of recent number movements (0-9) to identify potential overbought (predict SMALL) or oversold (predict BIG) conditions.</li>
                                     <li data-lang-key="how_it_works_li12_adv"><strong>Sum Range Analyzer:</strong> Calculates the sum of recent actual numbers and predicts based on whether this sum falls into predefined low, medium, or high ranges.</li>
                                     <li data-lang-key="how_it_works_li13_adv"><strong>High/Low Number Ratio Analyzer:</strong> Examines the ratio of high numbers (5-9) to low numbers (0-4) in recent history to identify imbalances.</li>
                                     <li data-lang-key="how_it_works_li14_adv"><strong>Sum Frequency Tracker:</strong> Analyzes the frequency of sums derived from pairs of recent consecutive numbers, predicting based on dominant sum ranges.</li>
+                                    <li data-lang-key="how_it_works_li15_adv"><strong>Number Distribution Analyzer:</strong> Studies how drawn numbers are spread across various segments of the number range (0-9).</li>
+                                    <li data-lang-key="how_it_works_li16_adv"><strong>Consecutive Number Analyzer:</strong> Identifies patterns in the occurrence of consecutive numbers (e.g., 3 then 4) in the sequence of results.</li>
+                                    <li data-lang-key="how_it_works_li17_adv"><strong>Markov Chain Analysis Engine (Simplified):</strong> Models the sequence of states (e.g., "BIG" sum draw followed by a "SMALL" sum) to identify discernible transition probabilities.</li>
+                                    <li data-lang-key="how_it_works_li18_adv"><strong>Information Theory (Entropy) Engine (Conceptual):</strong> Quantifies the apparent randomness or unpredictability of the outcome sequences.</li>
+                                    <li data-lang-key="how_it_works_li19_adv"><strong>Bayesian Inference Engine (Conceptual):</strong> Conceptually involves updating probabilities of outcomes based on observed past data.</li>
+                                    <li data-lang-key="how_it_works_li_ml_conceptual"><strong>Machine Learning (ML) Engine (Conceptual):</strong> Advanced AI algorithms (e.g., Neural Networks) could theoretically be trained on vast historical data to find complex patterns, but this is not fully implemented in the current client-side version due to complexity and resource constraints.</li>
+                                    <li data-lang-key="how_it_works_li_monte_carlo_conceptual"><strong>Monte Carlo Simulation Engine (Conceptual):</strong> Could simulate numerous draws to estimate probabilities, but extensive simulations are resource-intensive for real-time browser use.</li>
+                                    <li data-lang-key="how_it_works_li_other_advanced_conceptual"><strong>Other Advanced Engines (Conceptual):</strong> Techniques like Genetic Algorithms, Fractal Analysis, Chaos Theory, Wavelet Analysis, Graph Theory, Copula Modeling, Reinforcement Learning, Topological Data Analysis, Recurrence Quantification Analysis, Hidden Markov Models, and Optimal Transport represent highly specialized and computationally intensive methods for data analysis. While theoretically applicable to pattern detection, their full implementation for real-time prediction in this context is beyond typical client-side capabilities.</li>
                                     <li data-lang-key="how_it_works_li8_adv"><strong>Weighted Signal Aggregation:</strong> Each analytical module generates a weighted signal. These are combined into an ensemble prediction.</li>
                                     <li data-lang-key="how_it_works_li9_adv"><strong>Dynamic Confidence Scoring:</strong> Confidence reflects signal agreement, historical accuracy of similar patterns, and current volatility.</li>
                                     <li data-lang-key="how_it_works_li10_adv"><strong>Adaptive Trend Protection:</strong> Automatically disables or flags predictions during highly unstable or unfavorable trends.</li>
@@ -954,7 +962,7 @@
             authDomain: "aipredictor-cf4b8.firebaseapp.com",
             databaseURL: "https://aipredictor-cf4b8-default-rtdb.firebaseio.com",
             projectId: "aipredictor-cf4b8",
-            storageBucket: "aipredictor-cf4b8.appspot.com", // Corrected storageBucket format
+            storageBucket: "aipredictor-cf4b8.appspot.com", 
             messagingSenderId: "1036472549306",
             appId: "1:1036472549306:web:dc3630c08d41f84369a783",
             measurementId: "G-0YR80TMFPX"
@@ -984,10 +992,9 @@
             maintenanceContainer.classList.remove('active');
             appContainer.classList.add('active');
 
-            document.body.style.justifyContent = 'flex-start'; // Allow app to fill height
-            document.body.style.alignItems = 'stretch'; // Allow app to fill height
+            document.body.style.justifyContent = 'flex-start'; 
+            document.body.style.alignItems = 'stretch'; 
 
-            // Explicitly set initial section visibility for the app
             const allAppSections = document.querySelectorAll('#appContainer .content-section');
             allAppSections.forEach(section => {
                 if (section.id === 'homeSection') {
@@ -996,7 +1003,6 @@
                     section.classList.remove('active');
                 }
             });
-            // Also ensure the bottom navigation reflects "Home" as active
             const homeNavLi = document.querySelector('.navigation ul li a[data-section="homeSection"]')?.closest('li');
             if (homeNavLi) {
                 document.querySelectorAll('.navigation ul li').forEach(li => li.classList.remove('active'));
@@ -1117,7 +1123,6 @@
             }
 
             try {
-                // 1. Check Maintenance Mode from Firebase (Path from admin.html)
                 const maintenanceStatusRef = db.ref("maintenanceStatus/status");
                 const maintenanceMessageRef = db.ref("maintenanceStatus/message");
 
@@ -1127,14 +1132,12 @@
                 let isHardcodedAdmin = HARDCODED_ADMIN_KEYS.includes(key);
                 let isAdminKeyInDB = false;
                 let keyData = null;
-                let keyPath = null; // To store the path of the validated key ('accessKeysUser/' or 'accessKeysAdmin/')
+                let keyPath = null; 
 
-                // Check if the entered key is a DB-managed admin key
-                const adminKeyRef = db.ref("accessKeysAdmin/" + key); // Path from admin.html
+                const adminKeyRef = db.ref("accessKeysAdmin/" + key); 
                 const adminKeySnapshot = await adminKeyRef.get();
                 if (adminKeySnapshot.exists()) {
                     const adminData = adminKeySnapshot.val();
-                    // Ensure admin keys also have an expiry and isAdmin flag as per admin.html logic
                     if (adminData.isAdmin === true && (!adminData.expiry || Date.now() <= adminData.expiry)) {
                         isAdminKeyInDB = true;
                         keyData = adminData;
@@ -1142,7 +1145,6 @@
                     }
                 }
 
-                // If maintenance is active and the key is not an admin key (either hardcoded or from DB)
                 if (isMaintenanceActive && !isHardcodedAdmin && !isAdminKeyInDB) {
                     const maintenanceMessageSnapshot = await maintenanceMessageRef.get();
                     const message = maintenanceMessageSnapshot.val() || "The platform is currently under maintenance. Please try again later.";
@@ -1152,9 +1154,8 @@
                     return;
                 }
 
-                // If not already identified as a DB admin key, check user keys
                 if (!isAdminKeyInDB) {
-                    const userKeyRef = db.ref("accessKeysUser/" + key); // Path from admin.html
+                    const userKeyRef = db.ref("accessKeysUser/" + key); 
                     const userKeySnapshot = await userKeyRef.get();
                     if (userKeySnapshot.exists()) {
                         keyData = userKeySnapshot.val();
@@ -1162,7 +1163,6 @@
                     }
                 }
 
-                // If keyData is still null, the key was not found in user or admin paths (and not hardcoded admin)
                 if (!keyData && !isHardcodedAdmin) {
                     showLoginToast("Invalid Access Key.", "error");
                     loginButton.disabled = false;
@@ -1170,7 +1170,6 @@
                     return;
                 }
 
-                // If keyData was found (either user or admin from DB)
                 if (keyData) {
                     if (keyData.expiry && Date.now() > keyData.expiry) {
                         showLoginToast("Access Key has expired.", "error");
@@ -1179,8 +1178,6 @@
                         return;
                     }
 
-                    // Device ID check only for user keys (keyPath will indicate if it's a user key)
-                    // Admin keys (from DB or hardcoded) bypass device ID check
                     if (keyPath === ("accessKeysUser/" + key) && keyData.deviceId && keyData.deviceId !== deviceId && !isHardcodedAdmin && !isAdminKeyInDB) {
                         showLoginToast("Key linked to another device.", "error");
                         loginButton.disabled = false;
@@ -1188,17 +1185,15 @@
                         return;
                     }
 
-                    // Update lastLogin and deviceId (if applicable) only for keys found in DB
                     const updates = { lastLogin: firebase.database.ServerValue.TIMESTAMP };
                     if ((keyPath === ("accessKeysUser/" + key) && !keyData.deviceId) ||
-                        (isAdminKeyInDB && !keyData.deviceId)) { // Bind deviceId if admin key doesn't have one yet
+                        (isAdminKeyInDB && !keyData.deviceId)) { 
                         updates.deviceId = deviceId;
                     }
-                    if (keyPath) { // Ensure keyPath is valid (key was found in DB)
+                    if (keyPath) { 
                        await db.ref(keyPath).update(updates);
                     }
                 }
-                // If it's a hardcoded admin key and not found in DB, no DB update is performed for it, but access is granted.
 
                 showLoginToast("Login Successful! Loading Predictor...", "success");
                 localStorage.setItem('alphaXAiAccessKey', key);
@@ -1246,12 +1241,20 @@
                 how_it_works_li3_adv: "<strong>Advanced Pattern Matching:</strong> Identifies recurring sequences (e.g., BSBS, BBSS) and alternating trends.",
                 how_it_works_li4_adv: "<strong>Streak Dynamics:</strong> Analyzes current and historical win/loss streaks for both outcomes, assessing continuation or reversal likelihood.",
                 how_it_works_li5_adv: "<strong>Consecutive Event Profiling:</strong> Monitors frequency of consecutive BIGs or SMALLs (e.g., BBB, SSSS).",
-                how_it_works_li6_adv: "<strong>Gap Distribution Analysis:</strong> Studies the typical number of periods between specific outcomes.",
+                how_it_works_li6_adv: "<strong>Gap Distribution Analysis:</strong> Studies the typical number of periods between specific outcomes or differences between consecutive numbers.",
                 how_it_works_li7_adv: "<strong>Volatility Indexing:</strong> Measures recent market stability; high volatility can lead to cautious \"SKIP\" predictions or lower confidence.",
                 how_it_works_li11_adv: "<strong>Relative Strength Index (RSI) Analysis:</strong> Measures the speed and change of recent number movements (0-9) to identify potential overbought (predict SMALL) or oversold (predict BIG) conditions.",
                 how_it_works_li12_adv: "<strong>Sum Range Analyzer:</strong> Calculates the sum of recent actual numbers and predicts based on whether this sum falls into predefined low, medium, or high ranges.",
                 how_it_works_li13_adv: "<strong>High/Low Number Ratio Analyzer:</strong> Examines the ratio of high numbers (5-9) to low numbers (0-4) in recent history to identify imbalances.",
                 how_it_works_li14_adv: "<strong>Sum Frequency Tracker:</strong> Analyzes the frequency of sums derived from pairs of recent consecutive numbers, predicting based on dominant sum ranges.",
+                how_it_works_li15_adv: "<strong>Number Distribution Analyzer:</strong> Studies how drawn numbers are spread across various segments of the number range (0-9).",
+                how_it_works_li16_adv: "<strong>Consecutive Number Analyzer:</strong> Identifies patterns in the occurrence of consecutive numbers (e.g., 3 then 4) in the sequence of results.",
+                how_it_works_li17_adv: "<strong>Markov Chain Analysis Engine (Simplified):</strong> Models the sequence of states (e.g., \"BIG\" sum draw followed by a \"SMALL\" sum) to identify discernible transition probabilities.",
+                how_it_works_li18_adv: "<strong>Information Theory (Entropy) Engine (Conceptual):</strong> Quantifies the apparent randomness or unpredictability of the outcome sequences.",
+                how_it_works_li19_adv: "<strong>Bayesian Inference Engine (Conceptual):</strong> Conceptually involves updating probabilities of outcomes based on observed past data.",
+                how_it_works_li_ml_conceptual: "<strong>Machine Learning (ML) Engine (Conceptual):</strong> Advanced AI algorithms (e.g., Neural Networks) could theoretically be trained on vast historical data to find complex patterns, but this is not fully implemented in the current client-side version due to complexity and resource constraints.",
+                how_it_works_li_monte_carlo_conceptual: "<strong>Monte Carlo Simulation Engine (Conceptual):</strong> Could simulate numerous draws to estimate probabilities, but extensive simulations are resource-intensive for real-time browser use.",
+                how_it_works_li_other_advanced_conceptual: "<strong>Other Advanced Engines (Conceptual):</strong> Techniques like Genetic Algorithms, Fractal Analysis, Chaos Theory, Wavelet Analysis, Graph Theory, Copula Modeling, Reinforcement Learning, Topological Data Analysis, Recurrence Quantification Analysis, Hidden Markov Models, and Optimal Transport represent highly specialized and computationally intensive methods for data analysis. While theoretically applicable to pattern detection, their full implementation for real-time prediction in this context is beyond typical client-side capabilities.",
                 how_it_works_li8_adv: "<strong>Weighted Signal Aggregation:</strong> Each analytical module generates a weighted signal. These are combined into an ensemble prediction.",
                 how_it_works_li9_adv: "<strong>Dynamic Confidence Scoring:</strong> Confidence reflects signal agreement, historical accuracy of similar patterns, and current volatility.",
                 how_it_works_li10_adv: "<strong>Adaptive Trend Protection:</strong> Automatically disables or flags predictions during highly unstable or unfavorable trends.",
@@ -1293,12 +1296,20 @@
                 how_it_works_li3_adv: "<strong>उन्नत पैटर्न मिलान:</strong> आवर्ती अनुक्रमों (जैसे, BSBS, BBSS) और वैकल्पिक प्रवृत्तियों की पहचान करता है।",
                 how_it_works_li4_adv: "<strong>स्ट्रीक गतिशीलता:</strong> दोनों परिणामों के लिए वर्तमान और ऐतिहासिक जीत/हार की लकीरों का विश्लेषण करता है, निरंतरता या उत्क्रमण की संभावना का आकलन करता है।",
                 how_it_works_li5_adv: "<strong>लगातार घटना प्रोफाइलिंग:</strong> लगातार बड़े या छोटे (जैसे, BBB, SSSS) की आवृत्ति पर नज़र रखता है।",
-                how_it_works_li6_adv: "<strong>अंतराल वितरण विश्लेषण:</strong> विशिष्ट परिणामों के बीच अवधियों की विशिष्ट संख्या का अध्ययन करता है।",
+                how_it_works_li6_adv: "<strong>अंतराल वितरण विश्लेषण:</strong> विशिष्ट परिणामों के बीच अवधियों की विशिष्ट संख्या या लगातार संख्याओं के बीच के अंतर का अध्ययन करता है।",
                 how_it_works_li7_adv: "<strong>अस्थिरता अनुक्रमण:</strong> हाल की बाजार स्थिरता को मापता है; उच्च अस्थिरता सतर्क \"छोड़ें\" भविष्यवाणियां या कम आत्मविश्वास का कारण बन सकती है।",
                 how_it_works_li11_adv: "<strong>रिलेटिव स्ट्रेंथ इंडेक्स (RSI) विश्लेषण:</strong> हालिया संख्या गतिविधियों (0-9) की गति और परिवर्तन को मापता है ताकि संभावित ओवरबॉट (SMALL की भविष्यवाणी) या ओवरसोल्ड (BIG की भविष्यवाणी) स्थितियों की पहचान की जा सके।",
                 how_it_works_li12_adv: "<strong>योग सीमा विश्लेषक:</strong> हाल की वास्तविक संख्याओं के योग की गणना करता है और भविष्यवाणी करता है कि यह योग पूर्वनिर्धारित निम्न, मध्यम या उच्च श्रेणियों में आता है या नहीं।",
                 how_it_works_li13_adv: "<strong>उच्च/निम्न संख्या अनुपात विश्लेषक:</strong> असंतुलन की पहचान करने के लिए हाल के इतिहास में उच्च संख्याओं (5-9) और निम्न संख्याओं (0-4) के अनुपात की जांच करता है।",
                 how_it_works_li14_adv: "<strong>योग आवृत्ति ट्रैकर:</strong> हाल की लगातार संख्याओं के जोड़े से प्राप्त योगों की आवृत्ति का विश्लेषण करता है, प्रमुख योग श्रेणियों के आधार पर भविष्यवाणी करता है।",
+                how_it_works_li15_adv: "<strong>संख्या वितरण विश्लेषक:</strong> अध्ययन करता है कि संख्या श्रेणी (0-9) के विभिन्न खंडों में निकाली गई संख्याएँ कैसे फैली हुई हैं।",
+                how_it_works_li16_adv: "<strong>लगातार संख्या विश्लेषक:</strong> परिणामों के क्रम में लगातार संख्याओं (जैसे, 3 फिर 4) की घटना में पैटर्न की पहचान करता है।",
+                how_it_works_li17_adv: "<strong>मार्कोव चेन विश्लेषण इंजन (सरलीकृत):</strong> अवस्थाओं के अनुक्रम (जैसे, \"BIG\" योग ड्रा के बाद \"SMALL\" योग) को मॉडल करता है ताकि discernible संक्रमण संभावनाओं की पहचान की जा सके।",
+                how_it_works_li18_adv: "<strong>सूचना सिद्धांत (एन्ट्रॉपी) इंजन (अवधारणात्मक):</strong> परिणाम अनुक्रमों की स्पष्ट यादृच्छिकता या अप्रत्याशितता को मापता है।",
+                how_it_works_li19_adv: "<strong>बायेसियन अनुमान इंजन (अवधारणात्मक):</strong> अवधारणात्मक रूप से देखे गए पिछले डेटा के आधार पर परिणामों की संभावनाओं को अद्यतन करना शामिल है।",
+                how_it_works_li_ml_conceptual: "<strong>मशीन लर्निंग (ML) इंजन (अवधारणात्मक):</strong> उन्नत AI एल्गोरिदम (जैसे, न्यूरल नेटवर्क) को सैद्धांतिक रूप से जटिल पैटर्न खोजने के लिए विशाल ऐतिहासिक डेटा पर प्रशिक्षित किया जा सकता है, लेकिन जटिलता और संसाधन बाधाओं के कारण वर्तमान क्लाइंट-साइड संस्करण में यह पूरी तरह से लागू नहीं है।",
+                how_it_works_li_monte_carlo_conceptual: "<strong>मोंटे कार्लो सिमुलेशन इंजन (अवधारणात्मक):</strong> संभावनाओं का अनुमान लगाने के लिए कई ड्रा का अनुकरण कर सकता है, लेकिन वास्तविक समय ब्राउज़र उपयोग के लिए व्यापक सिमुलेशन संसाधन-गहन हैं।",
+                how_it_works_li_other_advanced_conceptual: "<strong>अन्य उन्नत इंजन (अवधारणात्मक):</strong> जेनेटिक एल्गोरिदम, फ्रैक्टल एनालिसिस, कैओस थ्योरी, वेवलेट एनालिसिस, ग्राफ थ्योरी, कोपुला मॉडलिंग, रीइन्फोर्समेंट लर्निंग, टोपोलॉजिकल डेटा एनालिसिस, रिकरेंस क्वांटिफिकेशन एनालिसिस, हिडन मार्कोव मॉडल और ऑप्टिमल ट्रांसपोर्ट जैसी तकनीकें डेटा विश्लेषण के लिए अत्यधिक विशिष्ट और कम्प्यूटेशनल रूप से गहन तरीके हैं। सैद्धांतिक रूप से पैटर्न पहचान के लिए लागू होने पर, इस संदर्भ में वास्तविक समय की भविष्यवाणी के लिए उनका पूर्ण कार्यान्वयन सामान्य क्लाइंट-साइड क्षमताओं से परे है।",
                 how_it_works_li8_adv: "<strong>भारित सिग्नल एकत्रीकरण:</strong> प्रत्येक विश्लेषणात्मक मॉड्यूल एक भारित सिग्नल उत्पन्न करता है। इन्हें एक सामूहिक भविष्यवाणी में संयोजित किया जाता है।",
                 how_it_works_li9_adv: "<strong>गतिशील आत्मविश्वास स्कोरिंग:</strong> आत्मविश्वास सिग्नल समझौते, समान पैटर्न की ऐतिहासिक सटीकता और वर्तमान अस्थिरता को दर्शाता है।",
                 how_it_works_li10_adv: "<strong>अनुकूली प्रवृत्ति संरक्षण:</strong> अत्यधिक अस्थिर या प्रतिकूल प्रवृत्तियों के दौरान स्वचालित रूप से भविष्यवाणियां को अक्षम या फ़्लैग करता है।",
@@ -1696,13 +1707,6 @@
             return null;
         }
 
-        /**
-         * Analyzes sum of recent numbers against predefined ranges.
-         * @param {Array<Object>} history - Array of past game results.
-         * @param {number} lookbackPeriod - How many recent numbers to sum.
-         * @param {number} weight - Base weight for this signal.
-         * @returns {Object|null} Prediction signal or null.
-         */
         function analyzeSumRanges(history, lookbackPeriod = 3, weight = 0.1) {
             const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null);
             if (actualNumbers.length < lookbackPeriod) return null;
@@ -1710,10 +1714,9 @@
             const recentNumbers = actualNumbers.slice(0, lookbackPeriod);
             const sum = recentNumbers.reduce((acc, val) => acc + val, 0);
 
-            // Define ranges based on lookbackPeriod (max sum = lookbackPeriod * 9)
             const maxSum = lookbackPeriod * 9;
-            const lowThreshold = maxSum * 0.33; // Example: bottom third
-            const highThreshold = maxSum * 0.66; // Example: top third
+            const lowThreshold = maxSum * 0.33; 
+            const highThreshold = maxSum * 0.66; 
 
             let prediction = null;
             if (sum < lowThreshold) {
@@ -1728,13 +1731,6 @@
             return null;
         }
 
-        /**
-         * Analyzes the ratio of high (5-9) to low (0-4) numbers in recent history.
-         * @param {Array<Object>} history - Array of past game results.
-         * @param {number} lookbackPeriod - How many recent numbers to consider.
-         * @param {number} weight - Base weight for this signal.
-         * @returns {Object|null} Prediction signal or null.
-         */
         function analyzeHighLowRatio(history, lookbackPeriod = 10, weight = 0.1) {
             const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null);
             if (actualNumbers.length < lookbackPeriod) return null;
@@ -1748,37 +1744,28 @@
                 else lowCount++;
             });
 
-            if (highCount === 0 && lowCount === 0) return null; // Avoid division by zero if no numbers
+            if (highCount === 0 && lowCount === 0) return null; 
 
             let prediction = null;
-            // Predict BIG if high numbers are significantly more, SMALL if low numbers are significantly more
-            if (highCount > lowCount * 1.5) { // Example threshold: 50% more high numbers
+            if (highCount > lowCount * 1.5) { 
                 prediction = "BIG";
-            } else if (lowCount > highCount * 1.5) { // Example threshold: 50% more low numbers
+            } else if (lowCount > highCount * 1.5) { 
                 prediction = "SMALL";
             }
 
             if (prediction) {
-                // Optional: Adjust weight based on the strength of the ratio
                 const ratioStrength = Math.abs(highCount - lowCount) / (highCount + lowCount);
                 return { prediction: prediction, weight: weight * (1 + ratioStrength), source: "HighLowRatio" };
             }
             return null;
         }
 
-        /**
-         * Analyzes the frequency of sums from pairs of recent consecutive numbers.
-         * @param {Array<Object>} history - Array of past game results.
-         * @param {number} pairLookback - How many recent numbers to form pairs from.
-         * @param {number} weight - Base weight for this signal.
-         * @returns {Object|null} Prediction signal or null.
-         */
         function analyzeSumFrequency(history, pairLookback = 10, weight = 0.12) {
             const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null);
-            if (actualNumbers.length < pairLookback + 1) return null; // Need at least pairLookback+1 numbers to form pairLookback pairs
+            if (actualNumbers.length < pairLookback + 1) return null; 
 
             const recentSums = [];
-            for (let i = 0; i < pairLookback; i++) { // Create `pairLookback` sums from the most recent `pairLookback + 1` numbers
+            for (let i = 0; i < pairLookback; i++) { 
                 if (actualNumbers[i] !== null && actualNumbers[i+1] !== null) {
                     recentSums.push(actualNumbers[i] + actualNumbers[i+1]);
                 }
@@ -1788,18 +1775,98 @@
 
             const averageSum = recentSums.reduce((acc, val) => acc + val, 0) / recentSums.length;
             
-            // Sum of two numbers (0-9) ranges from 0 to 18. Midpoint is 9.
             let prediction = null;
-            if (averageSum < 7.5) { // Significantly low average sum
+            if (averageSum < 7.5) { 
                 prediction = "SMALL";
-            } else if (averageSum > 10.5) { // Significantly high average sum
+            } else if (averageSum > 10.5) { 
                 prediction = "BIG";
             }
 
             if (prediction) {
-                // Optional: Adjust weight based on how far the average sum is from the midpoint
-                const deviation = Math.abs(averageSum - 9) / 9; // Max deviation is 1 (for 0 or 18)
+                const deviation = Math.abs(averageSum - 9) / 9; 
                 return { prediction: prediction, weight: weight * (1 + deviation), source: "SumFreq" };
+            }
+            return null;
+        }
+
+        function analyzeNumberDistribution(history, lookbackPeriod = 10, weight = 0.08) {
+            const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null);
+            if (actualNumbers.length < lookbackPeriod) return null;
+
+            const recentNumbers = actualNumbers.slice(0, lookbackPeriod);
+            const segments = { "0-1": 0, "2-3": 0, "4-5": 0, "6-7": 0, "8-9": 0 };
+            recentNumbers.forEach(num => {
+                if (num <= 1) segments["0-1"]++;
+                else if (num <= 3) segments["2-3"]++;
+                else if (num <= 5) segments["4-5"]++;
+                else if (num <= 7) segments["6-7"]++;
+                else segments["8-9"]++;
+            });
+
+            const smallHeavy = segments["0-1"] + segments["2-3"];
+            const bigHeavy = segments["6-7"] + segments["8-9"];
+
+            let prediction = null;
+            if (smallHeavy > bigHeavy * 1.3) prediction = "SMALL"; // If low numbers are 30% more frequent
+            else if (bigHeavy > smallHeavy * 1.3) prediction = "BIG"; // If high numbers are 30% more frequent
+            
+            if(prediction) {
+                return { prediction, weight, source: "NumDist" };
+            }
+            return null;
+        }
+
+        function analyzeConsecutiveNumbers(history, lookbackPeriod = 5, weight = 0.07) {
+            const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null);
+            if (actualNumbers.length < lookbackPeriod) return null;
+
+            const recentSequence = actualNumbers.slice(0, lookbackPeriod);
+            let consecutivePairs = 0;
+            for(let i = 0; i < recentSequence.length - 1; i++) {
+                if (Math.abs(recentSequence[i] - recentSequence[i+1]) === 1) {
+                    consecutivePairs++;
+                }
+            }
+            // This is a very conceptual signal. If many consecutive numbers, maybe it implies a trend or volatility.
+            // For BIG/SMALL, it's less direct. Let's assume high consecutiveness means more volatility,
+            // which might favor the last seen trend or be neutral.
+            // For now, let's make it a weak signal if consecutiveness is high, leaning towards the last outcome.
+            if (consecutivePairs >= lookbackPeriod / 2) { // If at least half are consecutive pairs
+                const lastOutcomeBS = getBigSmallFromActual(actualNumbers[0]);
+                if (lastOutcomeBS) {
+                    return { prediction: lastOutcomeBS, weight: weight * 0.5, source: "ConsecutiveNum" }; // Weak signal
+                }
+            }
+            return null;
+        }
+
+        function analyzeGapAnalysis(history, lookbackPeriod = 5, weight = 0.09) {
+            const actualNumbers = history.map(entry => entry.actual).filter(num => num !== null);
+            if (actualNumbers.length < lookbackPeriod + 1) return null;
+
+            const gaps = [];
+            for (let i = 0; i < lookbackPeriod; i++) {
+                gaps.push(Math.abs(actualNumbers[i] - actualNumbers[i+1]));
+            }
+            const averageGap = gaps.reduce((a,b) => a+b, 0) / gaps.length;
+
+            // If average gap is small, numbers are clustered. If large, spread out.
+            // Small gap might imply stability, large gap volatility.
+            // For BIG/SMALL, this is indirect.
+            // Let's say if average gap is very small (<2), lean towards repeating last BIG/SMALL.
+            // If average gap is large (>4), lean towards opposite of last BIG/SMALL.
+            const lastOutcomeBS = getBigSmallFromActual(actualNumbers[0]);
+            if (!lastOutcomeBS) return null;
+
+            let prediction = null;
+            if (averageGap < 2) {
+                prediction = lastOutcomeBS;
+            } else if (averageGap > 4) {
+                prediction = lastOutcomeBS === "BIG" ? "SMALL" : "BIG";
+            }
+
+            if (prediction) {
+                return { prediction, weight, source: "GapAnalysis" };
             }
             return null;
         }
@@ -1812,23 +1879,23 @@
             signalPerformance[signalSourceBase].total++;
             if (predictedBySignal === actualOutcome) {
                 signalPerformance[signalSourceBase].correct++;
-                signalPerformance[signalSourceBase].history.push(1); // 1 for correct
+                signalPerformance[signalSourceBase].history.push(1); 
             } else {
-                signalPerformance[signalSourceBase].history.push(0); // 0 for incorrect
+                signalPerformance[signalSourceBase].history.push(0); 
             }
-            if (signalPerformance[signalSourceBase].history.length > 10) { // Keep last 10 performance records
+            if (signalPerformance[signalSourceBase].history.length > 10) { 
                 signalPerformance[signalSourceBase].history.shift();
             }
         }
 
         function getDynamicWeightAdjustment(signalSourceBase) {
             const performance = signalPerformance[signalSourceBase];
-            if (!performance || performance.history.length < 3) return 1.0; // Default if not enough data
+            if (!performance || performance.history.length < 3) return 1.0; 
 
             const recentAccuracy = performance.history.slice(-5).reduce((a,b) => a+b, 0) / Math.min(performance.history.length, 5);
 
-            if (recentAccuracy > 0.7) return 1.15; // Boost if highly accurate
-            if (recentAccuracy < 0.3) return 0.85; // Penalize if inaccurate
+            if (recentAccuracy > 0.7) return 1.15; 
+            if (recentAccuracy < 0.3) return 0.85; 
             return 1.0;
         }
 
@@ -1851,16 +1918,19 @@
 
             let signals = [];
             signals.push(analyzeFrequency(confirmedHistory, 5, 0.1 * getDynamicWeightAdjustment('Freq')));
-            signals.push(analyzeFrequency(confirmedHistory, 10, 0.15 * getDynamicWeightAdjustment('Freq')));
-            signals.push(analyzeFrequency(confirmedHistory, 20, 0.1 * getDynamicWeightAdjustment('Freq')));
-            signals.push(analyzeTransitions(confirmedHistory, 0.2 * getDynamicWeightAdjustment('Transition')));
-            signals.push(analyzeStreaks(confirmedHistory, 0.18 * getDynamicWeightAdjustment('StreakBreak')));
-            signals.push(analyzeAlternatingPatterns(confirmedHistory, 0.12 * getDynamicWeightAdjustment('Alt')));
-            signals.push(analyzeWeightedHistorical(confirmedHistory, 0.85, 0.15 * getDynamicWeightAdjustment('WeightedHist')));
-            signals.push(analyzeRSI(confirmedHistory, 14, 0.15 * getDynamicWeightAdjustment('RSI'))); 
-            signals.push(analyzeSumRanges(confirmedHistory, 3, 0.1 * getDynamicWeightAdjustment('SumRange')));
-            signals.push(analyzeHighLowRatio(confirmedHistory, 10, 0.1 * getDynamicWeightAdjustment('HighLowRatio')));
-            signals.push(analyzeSumFrequency(confirmedHistory, 5, 0.12 * getDynamicWeightAdjustment('SumFreq')));
+            signals.push(analyzeFrequency(confirmedHistory, 10, 0.12 * getDynamicWeightAdjustment('Freq'))); // Slightly adjusted weight
+            signals.push(analyzeFrequency(confirmedHistory, 20, 0.08 * getDynamicWeightAdjustment('Freq'))); // Slightly adjusted weight
+            signals.push(analyzeTransitions(confirmedHistory, 0.18 * getDynamicWeightAdjustment('Transition'))); // Slightly adjusted weight
+            signals.push(analyzeStreaks(confirmedHistory, 0.15 * getDynamicWeightAdjustment('StreakBreak'))); // Slightly adjusted weight
+            signals.push(analyzeAlternatingPatterns(confirmedHistory, 0.1 * getDynamicWeightAdjustment('Alt'))); // Slightly adjusted weight
+            signals.push(analyzeWeightedHistorical(confirmedHistory, 0.85, 0.13 * getDynamicWeightAdjustment('WeightedHist'))); // Slightly adjusted weight
+            signals.push(analyzeRSI(confirmedHistory, 14, 0.13 * getDynamicWeightAdjustment('RSI'))); 
+            signals.push(analyzeSumRanges(confirmedHistory, 3, 0.08 * getDynamicWeightAdjustment('SumRange')));
+            signals.push(analyzeHighLowRatio(confirmedHistory, 10, 0.08 * getDynamicWeightAdjustment('HighLowRatio')));
+            signals.push(analyzeSumFrequency(confirmedHistory, 5, 0.1 * getDynamicWeightAdjustment('SumFreq')));
+            signals.push(analyzeNumberDistribution(confirmedHistory, 10, 0.07 * getDynamicWeightAdjustment('NumDist')));
+            signals.push(analyzeConsecutiveNumbers(confirmedHistory, 5, 0.06 * getDynamicWeightAdjustment('ConsecutiveNum')));
+            signals.push(analyzeGapAnalysis(confirmedHistory, 5, 0.07 * getDynamicWeightAdjustment('GapAnalysis')));
 
 
             signals = signals.filter(s => s !== null && s.prediction !== "SKIP" && s.weight > 0.01);
@@ -1886,23 +1956,23 @@
             else if (smallScore > bigScore) finalPrediction = "SMALL";
             else finalPrediction = Math.random() > 0.5 ? "BIG" : "SMALL"; 
 
-            let confidence = 45; 
+            let confidence = 40; // Start with a slightly lower base due to more signals
             if (totalWeight > 0) {
                 const predominance = Math.abs(bigScore - smallScore) / totalWeight; 
-                confidence += predominance * 35; 
-                confidence += Math.min(contributingSources.size * 4, 20); 
+                confidence += predominance * 30; // Max 30 points from predominance
+                confidence += Math.min(contributingSources.size * 3, 25); // Max 25 points for agreement
             }
 
-            confidence += Math.min(signals.length * 2, 10); 
+            confidence += Math.min(signals.length * 1.5, 15); // Max 15 for number of signals
 
             if (stability.reason !== "Trend appears stable enough for prediction" && stability.isStable) {
                 confidence *= 0.85; 
             }
 
-            if (!isAdvancedModeActive && confidence > 70) { 
-                confidence = 70 + (confidence - 70) * 0.5;
+            if (!isAdvancedModeActive && confidence > 75) { // Cap confidence for normal mode slightly higher
+                confidence = 75 + (confidence - 75) * 0.4;
             }
-            confidence = Math.min(Math.max(Math.floor(confidence), 35), 97); 
+            confidence = Math.min(Math.max(Math.floor(confidence), 30), 98); // Adjusted bounds
 
             return {
                 prediction: finalPrediction,
